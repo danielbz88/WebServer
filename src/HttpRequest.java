@@ -2,6 +2,11 @@ import java.io.* ;
 import java.net.* ;
 import java.util.* ;
 
+/*
+ * This class receives in its constructor the HTTP request and 
+ * parses the header fields.
+ */
+
 final class HttpRequest implements Runnable
 {
     final static String CRLF = "\r\n";
