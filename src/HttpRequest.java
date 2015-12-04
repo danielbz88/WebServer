@@ -1,38 +1,37 @@
-import java.io.* ;
-import java.net.* ;
-import java.util.* ;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
 
-/*
- * This class receives in its constructor the HTTP request and 
- * parses the header fields.
- */
+public class HttpRequest implements Runnable {
+	final static String CRLF = "\r\n";
+	private SynchronizedQueue<Socket> jobsQueue;
+	private int id;
 
-final class HttpRequest implements Runnable
-{
-    final static String CRLF = "\r\n";
-    Socket socket;
-    
-    // Constructor
-    public HttpRequest(Socket socket) throws Exception
-	{
-		this.socket = socket;
-    }
-    
-    // Implement the run() method of the Runnable interface.
-    public void run()
-	{
-		try
-		{
-		    processRequest();
-		}
-		catch (Exception e)
-		{
-		    System.out.println(e);
-		}
+	public HttpRequest(SynchronizedQueue<Socket> jobsQueue, int id) {
+		this.jobsQueue = jobsQueue;
+		this.id = id;
 	}
 
-	private void processRequest() throws Exception
-	{
+	@Override
+	public void run() {
+		Socket socket;
+        // we get null only when resultsQueue is empty and without producers
+        while ((socket = jobsQueue.dequeue()) != null) {
+        	try
+    		{
+        		System.out.println("Thread " + this.id + " starting process the request");
+    		    processRequest(socket);
+    		    System.out.println("Thread " + this.id + " finish process the request");
+    		}
+    		catch (Exception e)
+    		{
+    		    System.out.println(e);
+    		}
+        }
+		
+	}
+
+	private void processRequest(Socket socket) throws IOException {
 		DataOutputStream os = new DataOutputStream(socket.getOutputStream());
 		//Get the source IP
 		String sourceIP = socket.getInetAddress().getHostAddress();
@@ -46,6 +45,15 @@ final class HttpRequest implements Runnable
 		"<HEAD><TITLE>"+ sourceIP +"</TITLE></HEAD>" +
 		"<BODY><H1>"+ sourceIP +"</H1></BODY></HTML>";
 		
+		int x= 0;
+		for (int i = 0; i < Math.pow(2, 30); i++) {
+			x++;
+		}
+		
+		for (int i = 0; i < Math.pow(2, 30); i++) {
+			x++;
+		}
+		
 		// Send the status line.
 		os.writeBytes(statusLine);
 		
@@ -56,6 +64,7 @@ final class HttpRequest implements Runnable
 		os.writeBytes(contentLength + entityBody.length() + CRLF);
 		
 		// Send a blank line to indicate the end of the header lines.
+		os.writeBytes("" + x);
 		os.writeBytes(CRLF);
 		
 		// Send the content of the HTTP.
@@ -64,8 +73,7 @@ final class HttpRequest implements Runnable
 		// Close streams and socket.
 		os.close();
 		socket.close();
-    }
+		
+	}
 
 }
-
-
