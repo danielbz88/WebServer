@@ -3,6 +3,29 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 public class Utils {
+	
+	// HTTP textual elements
+	final protected static String CRLF = "\r\n";
+	final protected static String END_OF_HEADER = "\r\n\r\n";
+	final protected static String HTTP_VERSION_1_0 = "HTTP/1.0";
+	final protected static String HTTP_VERSION_1_1 = "HTTP/1.1";
+	
+	// Methods
+	final protected static String GET = "GET";
+	final protected static String POST = "POST";
+	final protected static String HEAD = "HEAD";
+	final protected static String TRACE = "TRACE";
+	// Bonus
+	final protected static String OPTIONS = "OPTIONS";
+	
+	// Responses
+	final protected static String OK = "200 OK";
+	final protected static String NOT_FOUND = "404 Not Found";
+	final protected static String NOT_IMPLEMENTED = "501 Not Implemented";
+	final protected static String BAD_REQUEST = "400 Bad Request";
+	final protected static String ERROR = "500 Internal Server Error";
+	
+	// Configurations 
 	protected static int PORT;
 	protected static String ROOT;
 	protected static String DEFUALT_PAGE;
@@ -44,6 +67,7 @@ public class Utils {
 		
 		return (numOfParsedProps == 4);		
 	}
+
 
 	protected static String readFile(File file) throws IOException {
 		String rawConfigFile = "";

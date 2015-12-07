@@ -10,7 +10,7 @@ public class ThreadPool {
 	private int maxThreads = 0;
 	
 	private ThreadPool(int maxThreads){
-		this.requestQueue = new SynchronizedQueue<>(maxThreads);
+		this.requestQueue = new SynchronizedQueue<>(1);
 		this.maxThreads = maxThreads;
 	}
 	
@@ -36,7 +36,7 @@ public class ThreadPool {
 		if(numOfActiveThreads < maxThreads){
 			numOfActiveThreads++;
 			System.out.println("Creatring thread " + this.numOfActiveThreads);
-			HttpRequest httpRequest = new HttpRequest(this.requestQueue, this.numOfActiveThreads);
+			RequestHandler httpRequest = new RequestHandler(this.requestQueue, this.numOfActiveThreads);
 			Thread thread = new Thread(httpRequest);
 			thread.start();
 		}
