@@ -67,7 +67,6 @@ public class SynchronizedQueue<T> {
         synchronized (buffer) {
             while (this.getSize() == this.getCapacity()) {
                 try {
-                	System.out.println("All threads are busy, waiting...");
                     buffer.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -76,6 +75,25 @@ public class SynchronizedQueue<T> {
             buffer[this.getSize()] = item;
             size++;
             buffer.notifyAll();
+        }
+
+    }
+    
+    /**
+     * This method blocks producer from acquiring new items until space 
+     * becomes available.
+     * 
+     */
+    public void waitForFreeThread() {
+        synchronized (buffer) {
+            while (this.getSize() == this.getCapacity()) {
+                try {
+                	System.out.println("All Threads are busy.\nwaiting...");
+                    buffer.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
     }

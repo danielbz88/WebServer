@@ -74,7 +74,7 @@ public class HTTPRequest {
 		return this.method;
 	}
 	
-	public boolean isBadRequest() { 
+	public boolean isBadRequest() {
 		return this.isBadRequest;
 	}
 	
@@ -113,5 +113,13 @@ public class HTTPRequest {
 			}
 		}	
 		System.out.println("==================================================");
+	}
+
+	// Validate the request is up to standards 
+	public void validate() {
+		if(this.HTTPVersion.equals(Utils.HTTP_VERSION_1_1)){
+			this.isBadRequest &= this.headers.containsKey("Host");
+		}
+
 	}
 }

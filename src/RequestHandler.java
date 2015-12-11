@@ -23,22 +23,27 @@ public class RequestHandler implements Runnable {
 		Socket socket;
 		// we get null only when jobsQueue is empty and without producers
 		while ((socket = jobsQueue.dequeue()) != null) {
-			try
-			{
-				System.out.println("Thread " + this.id +" processing request.");
+			boolean connectionAlive = true;
+			try{
+				// Set the time we wait for the client to write a new-line
+				// to 10 seconds
+				socket.setSoTimeout(10000);
 				BufferedReader inFromClient =
 						new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				DataOutputStream outToClient =
 						new DataOutputStream(socket.getOutputStream());
-
-
-				HTTPRequest httpRequest = processRequest(inFromClient);
-				processResponse(outToClient, httpRequest);
-				socket.close();
+				// persistent connection
+				while(connectionAlive){
+					System.out.println("Thread " + this.id +" processing request.");
+					HTTPRequest httpRequest = processRequest(inFromClient);
+					processResponse(outToClient, httpRequest);
+				}
 			}
+
 			catch (Exception e)
 			{
-				System.out.println(e);
+				connectionAlive = false;
+				System.out.println("Connection Lost");
 			}
 		}
 	}
@@ -49,7 +54,7 @@ public class RequestHandler implements Runnable {
 		StringBuilder requestHeaders = new StringBuilder();
 
 		// Read lines until we recognize the start of an HTTP protocol
-		//**Bonus**
+		//**Bonus** 
 		String line = "";
 		while(!line.endsWith(Utils.HTTP_VERSION_1_0) && !line.endsWith(" " + Utils.HTTP_VERSION_1_1)){
 			line = inFromClient.readLine();
@@ -70,17 +75,21 @@ public class RequestHandler implements Runnable {
 			httpRequest.parseHeaders(requestHeaders.toString());
 		}
 
-		// we continue to read additional 'Content-Length' chars as parameters
-		StringBuilder params = new StringBuilder();			
-		String contentLength = httpRequest.getHeader("Content-Length");
-		if(contentLength != null){
-			int charsToRead = Integer.parseInt(contentLength);		
-			for (int i = 0; i < charsToRead ; i++) {
-				params.append((char) inFromClient.read());
-			}
+		// if the request is 'POST'
+		// we continue to read additional 'Content-Length' characters as parameters
+		if(httpRequest.getMethod().equals(Utils.POST)){
+			StringBuilder params = new StringBuilder();			
+			String contentLength = httpRequest.getHeader("Content-Length");
+			if(contentLength != null){
+				int charactersToRead = Integer.parseInt(contentLength);		
+				for (int i = 0; i < charactersToRead ; i++) {
+					params.append((char) inFromClient.read());
+				}
 
-			httpRequest.parseParmas(params.toString());
+				httpRequest.parseParmas(params.toString());
+			}
 		}
+		
 
 
 		/*// Print the request header
@@ -90,7 +99,7 @@ public class RequestHandler implements Runnable {
 		System.out.println(requestHeaders);
 		System.out.println("==================================================");*/
 
-
+		httpRequest.validate();
 		httpRequest.printRequestDebug();
 		return httpRequest;
 	}
@@ -108,7 +117,7 @@ public class RequestHandler implements Runnable {
 		}
 
 		
-		// Create the appropriate httpMethod instance according to the string input.
+		/*// Create the appropriate httpMethod instance according to the string input.
 		HttpMethod httpMethod = null;
 		try {
 			httpMethod = (HttpMethod) Class.forName("Method" + httpRequest.getMethod()).getConstructor().newInstance();
@@ -125,7 +134,7 @@ public class RequestHandler implements Runnable {
 		System.out.println(httpMethod.getResponseHeader());
 		if (httpMethod instanceof ReturnsData){
 			((ReturnsData) httpMethod).respond(outToClient);
-		}
+		}*/
 		
 		
 		
@@ -158,9 +167,6 @@ public class RequestHandler implements Runnable {
 
 			// Send the content of the HTTP.
 			outToClient.writeBytes(entityBody) ;
-
-			// Close streams and socket.
-			outToClient.close();
 		} catch (IOException e) {
 
 		}	

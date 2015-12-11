@@ -30,8 +30,7 @@ public class ThreadPool {
 		return INSTANCE;
 	}
 
-	public void addJob(Socket connection) {
-        
+	public void addJob(Socket connection) {    
 		// If we didn't reach maxThreads we create another one
 		if(numOfActiveThreads < maxThreads){
 			numOfActiveThreads++;
@@ -43,6 +42,11 @@ public class ThreadPool {
 		
 		// add the new request to the queue
 		this.requestQueue.enqueue(connection);
+		
+		// If we created maxThreads threads and they're busy we wait
+		if(numOfActiveThreads == maxThreads){
+			this.requestQueue.waitForFreeThread();
+		}
 	}
 
 	public void unregister() { 
