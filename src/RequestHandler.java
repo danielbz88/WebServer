@@ -130,7 +130,7 @@ public class RequestHandler implements Runnable {
 		
 		
 		
-//		TODO: Sort of following lines:
+//		TODO: Sort-of following lines:
 //		Read the file’s content.
 		
 //		Create HTTP response header:

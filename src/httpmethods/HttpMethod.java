@@ -12,3 +12,7 @@ public abstract class HttpMethod {
 	
 	public abstract String getResponseHeader();	
 }
+
+
+
+//TODO: NEED TO MOVE ALL FILES TO SINGLE PACKAGE BEFORE SUBMISSION!!!!
