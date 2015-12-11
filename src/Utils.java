@@ -15,6 +15,7 @@ public class Utils {
 	final protected static String POST = "POST";
 	final protected static String HEAD = "HEAD";
 	final protected static String TRACE = "TRACE";
+	
 	// Bonus
 	final protected static String OPTIONS = "OPTIONS";
 	

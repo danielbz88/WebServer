@@ -1,9 +1,13 @@
+import httpmethods.*;
+
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.lang.Class;
+import java.lang.reflect.InvocationTargetException;
 
 public class RequestHandler implements Runnable {
 	private SynchronizedQueue<Socket> jobsQueue;
@@ -21,6 +25,7 @@ public class RequestHandler implements Runnable {
 		while ((socket = jobsQueue.dequeue()) != null) {
 			try
 			{
+				System.out.println("Thread " + this.id +" processing request.");
 				BufferedReader inFromClient =
 						new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				DataOutputStream outToClient =
@@ -36,7 +41,6 @@ public class RequestHandler implements Runnable {
 				System.out.println(e);
 			}
 		}
-
 	}
 
 	private HTTPRequest processRequest(BufferedReader inFromClient) throws IOException {
@@ -45,6 +49,7 @@ public class RequestHandler implements Runnable {
 		StringBuilder requestHeaders = new StringBuilder();
 
 		// Read lines until we recognize the start of an HTTP protocol
+		//**Bonus**
 		String line = "";
 		while(!line.endsWith(Utils.HTTP_VERSION_1_0) && !line.endsWith(" " + Utils.HTTP_VERSION_1_1)){
 			line = inFromClient.readLine();
@@ -95,14 +100,47 @@ public class RequestHandler implements Runnable {
 		String statusLine = httpRequest.getHTTPVersion() + " ";
 		String contentTypeLine = "Content-Type: text/html" + Utils.CRLF;
 		String contentLength = "Content-Length: ";
-
+		
 		if(httpRequest.isBadRequest()){
 			statusLine += Utils.BAD_REQUEST + Utils.CRLF;
 		} else {
 			statusLine += Utils.OK + Utils.CRLF;
 		}
 
-
+		
+		// Create the appropriate httpMethod instance according to the string input.
+		HttpMethod httpMethod = null;
+		try {
+			httpMethod = (HttpMethod) Class.forName("Method" + httpRequest.getMethod()).getConstructor().newInstance();
+		} catch (InstantiationException | IllegalAccessException
+				| IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException
+				| ClassNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		//Call necessary methods
+//		TODO: implement ReturnsDatat.respond() methods for POST and GET
+		System.out.println(httpMethod.getResponseHeader());
+		if (httpMethod instanceof ReturnsData){
+			((ReturnsData) httpMethod).respond(outToClient);
+		}
+		
+		
+		
+		
+//		TODO: Sort of following lines:
+//		Read the file’s content.
+		
+//		Create HTTP response header:
+//		HTTP/1.1 200 OK[CRLF]
+//		content-type: text/html[CRLF]
+//		content-length: <the length of index.html>[CRLF] [CRLF]
+		
+//		Print the header.
+		
+//		Send full response to client (including the page content).		
 
 		try {
 			String entityBody = Utils.readFile(new File(Utils.ROOT + httpRequest.getPage()));
@@ -125,11 +163,20 @@ public class RequestHandler implements Runnable {
 			outToClient.close();
 		} catch (IOException e) {
 
-		}
-
-
-
+		}	
 	}
-
-
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

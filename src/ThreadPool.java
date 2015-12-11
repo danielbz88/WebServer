@@ -36,8 +36,8 @@ public class ThreadPool {
 		if(numOfActiveThreads < maxThreads){
 			numOfActiveThreads++;
 			System.out.println("Creatring thread " + this.numOfActiveThreads);
-			RequestHandler httpRequest = new RequestHandler(this.requestQueue, this.numOfActiveThreads);
-			Thread thread = new Thread(httpRequest);
+			RequestHandler requestHandler = new RequestHandler(this.requestQueue, this.numOfActiveThreads);
+			Thread thread = new Thread(requestHandler);
 			thread.start();
 		}
 		
@@ -48,13 +48,11 @@ public class ThreadPool {
 	public void unregister() { 
 		// unregister
 		this.requestQueue.unregisterProducer();
-		
 	}
 	
 	public void register() { 
 		// register as a producer to the queue
-		this.requestQueue.registerProducer();
-		
+		this.requestQueue.registerProducer();	
 	}
 
 }

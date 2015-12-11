@@ -51,7 +51,6 @@ public class HTTPRequest {
 				this.headers.put(key, value);
 			}
 		}
-
 	}
 
 	// Parsing 'params' from a string like 'x=1&y=2'
@@ -87,9 +86,12 @@ public class HTTPRequest {
 		return this.page;
 	}
 
-
 	public String getHeader(String header) { 		
 		return headers.get(header);
+	}
+	
+	public HashMap<String,String> getParams() { 
+		return params;
 	}
 
 	public void printRequestDebug(){
