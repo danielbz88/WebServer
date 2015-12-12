@@ -131,7 +131,6 @@ public class RequestHandler implements Runnable {
 			e.printStackTrace();
 		}				
 	}
-
 	
 	private File respondAndGetResource(DataOutputStream outToClient, HTTPRequest httpRequest) throws IOException {
 		
@@ -247,27 +246,3 @@ public class RequestHandler implements Runnable {
 		outToClient.writeBytes("0" + Utils.CRLF + Utils.CRLF);
 	}
 }
-
-
-//switch (httpRequest.getMethod()) {
-//case Utils.GET:
-//	break;
-//case Utils.POST:
-//	break;
-//case Utils.HEAD:
-//	break;
-//case Utils.TRACE:
-//	break;
-//default:
-//	break;
-//}
-//switch(httpRequest.getHeader(Utils.CONTENT_TYPE)){
-//case Utils.IMAGE:
-//	break;
-//case Utils.ICON:
-//	break;
-//case Utils.TEXT_HTML:
-//	break;
-//default:
-//	break;	
-//}
