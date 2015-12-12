@@ -20,7 +20,6 @@ public class HTTPRequest {
 		if(firstLineArr.length == 3){
 			this.method = firstLineArr[0].trim();
 			this.resourcePath = firstLineArr[1].trim();
-			//TODO: make sure resourcePath does not include "../"
 			// bonus
 			this.HTTPVersion = firstLineArr[2].trim();
 
@@ -34,6 +33,10 @@ public class HTTPRequest {
 				}
 			}
 		} else {
+			this.isBadRequest = true;
+		}
+		
+		if(this.resourcePath.contains("../")){
 			this.isBadRequest = true;
 		}
 	}
