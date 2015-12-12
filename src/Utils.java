@@ -35,7 +35,7 @@ public class Utils {
 	protected static boolean parseConfigFile() {
 		int numOfParsedProps = 0;
 		try {
-			String rawConfigFile = readFile(new File("../WebServer/config.ini"));
+			String rawConfigFile = readFile(new File("config.ini"));
 			String[] properties = rawConfigFile.split("\n");
 			for (String property : properties) {
 				int delim = property.indexOf('=');
