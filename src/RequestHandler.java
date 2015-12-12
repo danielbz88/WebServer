@@ -87,8 +87,6 @@ public class RequestHandler implements Runnable {
 				httpRequest.parseParmas(params.toString());
 			}
 		}
-		
-
 
 		/*// Print the request header
 		System.out.println("Thread " + this.id + " processing request:");
@@ -177,8 +175,7 @@ public class RequestHandler implements Runnable {
 	}
 	
 	private int getContentLength(File resource) {
-		// TODO implement
-		return 0;
+		return (int)resource.length();
 	}
 
 	private String getResourceType(String resourcePath) {

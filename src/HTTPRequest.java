@@ -25,6 +25,7 @@ public class HTTPRequest {
 
 			// If the request is GET, the params are separated by '?' from the
 			// requested page
+			//TODO: What about POST? and Unimplemented methods
 			int delim = this.resourcePath.indexOf("?");
 			if(this.method.equals(Utils.GET) && delim > 0){				
 				this.resourcePath = this.resourcePath.substring(0, delim);
