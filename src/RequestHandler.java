@@ -107,6 +107,24 @@ public class RequestHandler implements Runnable {
 		File resource;
 		try {
 			resource = respondAndGetResource(outToClient, httpRequest);
+			
+			//TODO: impelement different method responses
+			switch (httpRequest.getMethod()) {
+			case Utils.GET:
+				break;
+			case Utils.POST:
+				break;
+			case Utils.HEAD:
+				//Do nothing
+				return;
+			case Utils.TRACE:
+				//Send back the headers from request
+				outToClient.writeBytes(httpRequest.getAllHeaders());
+				break;
+			default:
+				break;
+			}
+			
 			sendDataToClient(outToClient, resource);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -129,13 +147,15 @@ public class RequestHandler implements Runnable {
 	private File respondAndGetResource(DataOutputStream outToClient, HTTPRequest httpRequest) throws IOException {
 		
 		if(httpRequest.isBadRequest()){
-			System.out.println(httpRequest.getHTTPVersion() + Utils.BAD_REQUEST + Utils.CRLF);
-			outToClient.writeBytes(httpRequest.getHTTPVersion() + Utils.BAD_REQUEST + Utils.CRLF);
+			System.out.println(httpRequest.getHTTPVersion() + Utils.BAD_REQUEST + Utils.CRLF + Utils.CRLF);
+			outToClient.writeBytes(httpRequest.getHTTPVersion() + Utils.BAD_REQUEST + Utils.CRLF + Utils.CRLF);
 			return null;
 		}
 
 		String statusLine;
 		String resourcePath;
+		String resourceType;
+		int contentLength = 0;
 
 		// Check if resource is default page
 		if(httpRequest.getResourcePath() == "/"){
@@ -149,24 +169,65 @@ public class RequestHandler implements Runnable {
 		if(resource.exists() && !resource.isDirectory()) {
 			statusLine = httpRequest.getHTTPVersion() + Utils.OK + Utils.CRLF;
 		}else{
-			System.out.println(httpRequest.getHTTPVersion() + Utils.NOT_FOUND + Utils.CRLF);
-			outToClient.writeBytes(httpRequest.getHTTPVersion() + Utils.NOT_FOUND + Utils.CRLF);
+			System.out.println(httpRequest.getHTTPVersion() + Utils.NOT_FOUND + Utils.CRLF + Utils.CRLF);
+			outToClient.writeBytes(httpRequest.getHTTPVersion() + Utils.NOT_FOUND + Utils.CRLF + Utils.CRLF);
 			return null;
 		}
 		
+		StringBuilder sb = new StringBuilder();
+		sb.append(statusLine);
+		
+		resourceType = getResourceType(resourcePath);
+		sb.append(Utils.CONTENT_TYPE + resourceType);
+		
+		contentLength = getContentLength(resource);
+		sb.append(Utils.CONTENT_LENGTH + contentLength);
+		
 		System.out.println(statusLine + httpRequest.getAllHeaders());
-		outToClient.writeBytes(statusLine + httpRequest.getAllHeaders());
+		outToClient.writeBytes(statusLine + httpRequest.getAllHeaders() + Utils.CRLF);
 		return resource;
 	}
 	
+	private int getContentLength(File resource) {
+		// TODO implement
+		return 0;
+	}
+
+	private String getResourceType(String resourcePath) {
+		String type;		
+		String[] tokens = resourcePath.split(".");
+		switch(tokens[tokens.length - 1]){
+		case "bmp":
+		case "jpg":
+		case "gif":
+		case "png":
+			//Image
+			type = Utils.IMAGE;
+			break;
+		case "ico":
+			//Icon
+			type = Utils.ICON;
+			break;
+		case "txt":
+		case "html":
+			//text/html
+			type = Utils.TEXT_HTML;
+			break;
+		default:
+			//application/octet-stream
+			type = Utils.APPLICATION_OCTET_STREAM;
+			break;
+		}
+		
+		return type;
+	}
+
 	private void sendDataToClient(DataOutputStream outToClient, File resource) throws IOException {
 		String entityBody = Utils.readFile(resource);
 		
-		// Send a blank line to indicate the end of the header lines.
-		outToClient.writeBytes(Utils.CRLF);
-		
 		// Send file
 		//TODO: deal with different file types
+		//TODO: support chunked
 		outToClient.writeBytes(entityBody);
 	}
 }

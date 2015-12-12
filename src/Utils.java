@@ -15,13 +15,13 @@ public class Utils {
 	final protected static String POST = "POST";
 	final protected static String HEAD = "HEAD";
 	final protected static String TRACE = "TRACE";
-	final protected static String OPTIONS1 = "OPTIONS";//TODO: IMPLEMENT
+	final protected static String OPTIONS = "OPTIONS";//TODO: IMPLEMENT
 	
 	// Headers
-	final protected static String CONTENT_TYPE = "Content-Type";
-	final protected static String CONTENT_LENGTH = "Content-Length";
+	final protected static String CONTENT_TYPE = "Content-Type: ";
+	final protected static String CONTENT_LENGTH = "Content-Length: ";
 	
-	// Content Types
+	// Resource Types
 	final protected static String IMAGE = "image";
 	final protected static String ICON = "icon";
 	final protected static String TEXT_HTML = "text/html";

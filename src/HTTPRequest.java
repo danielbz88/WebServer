@@ -20,6 +20,7 @@ public class HTTPRequest {
 		if(firstLineArr.length == 3){
 			this.method = firstLineArr[0].trim();
 			this.resourcePath = firstLineArr[1].trim();
+			//TODO: make sure resourcePath does not include "../"
 			// bonus
 			this.HTTPVersion = firstLineArr[2].trim();
 
@@ -95,7 +96,6 @@ public class HTTPRequest {
 		Iterator it = headers.entrySet().iterator();
 	    while (it.hasNext()) {
 	        Map.Entry pair = (Map.Entry)it.next();
-	        System.out.println(pair.getKey() + " = " + pair.getValue());
 	        sb.append(pair.getKey() + ": " + pair.getValue() + Utils.CRLF);
 	        it.remove(); // avoids a ConcurrentModificationException
 	    }
