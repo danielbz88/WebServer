@@ -104,9 +104,14 @@ public class RequestHandler implements Runnable {
 
 	private void processResponse(DataOutputStream outToClient, HTTPRequest httpRequest) {
 		
-		File resource = respondAndGetResource(httpRequest);		
-		sendDataToClient(resource);
-		
+		File resource;
+		try {
+			resource = respondAndGetResource(outToClient, httpRequest);
+			sendDataToClient(outToClient, resource);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
 		
 //		TODO: Sort-of following lines:
 //		Read the file’s content.
@@ -121,10 +126,11 @@ public class RequestHandler implements Runnable {
 //		Send full response to client (including the page content).		
 	}
 
-	private File respondAndGetResource(HTTPRequest httpRequest) {
+	private File respondAndGetResource(DataOutputStream outToClient, HTTPRequest httpRequest) throws IOException {
 		
 		if(httpRequest.isBadRequest()){
 			System.out.println(httpRequest.getHTTPVersion() + Utils.BAD_REQUEST + Utils.CRLF);
+			outToClient.writeBytes(httpRequest.getHTTPVersion() + Utils.BAD_REQUEST + Utils.CRLF);
 			return null;
 		}
 
@@ -144,57 +150,47 @@ public class RequestHandler implements Runnable {
 			statusLine = httpRequest.getHTTPVersion() + Utils.OK + Utils.CRLF;
 		}else{
 			System.out.println(httpRequest.getHTTPVersion() + Utils.NOT_FOUND + Utils.CRLF);
+			outToClient.writeBytes(httpRequest.getHTTPVersion() + Utils.NOT_FOUND + Utils.CRLF);
 			return null;
 		}
 		
 		System.out.println(statusLine + httpRequest.getAllHeaders());
+		outToClient.writeBytes(statusLine + httpRequest.getAllHeaders());
 		return resource;
-		
-//		switch (httpRequest.getMethod()) {
-//		case Utils.GET:
-//			break;
-//		case Utils.POST:
-//			break;
-//		case Utils.HEAD:
-//			break;
-//		case Utils.TRACE:
-//			break;
-//		default:
-//			break;
-//		}
-//		switch(httpRequest.getHeader(Utils.CONTENT_TYPE)){
-//		case Utils.IMAGE:
-//			break;
-//		case Utils.ICON:
-//			break;
-//		case Utils.TEXT_HTML:
-//			break;
-//		default:
-//			break;	
-//		}
 	}
 	
-	private void sendDataToClient(File resource) {
-		try {
-			String entityBody = Utils.readFile(new File(Utils.ROOT + httpRequest.getPage()));
-			// Send the status line.
-			outToClient.writeBytes(statusLine);
-
-			// Send the content type line.
-			outToClient.writeBytes(contentTypeLine);
-
-			// Send content length.
-			outToClient.writeBytes(contentLength + entityBody.length() + Utils.CRLF);
-
-			// Send a blank line to indicate the end of the header lines.
-			outToClient.writeBytes(Utils.CRLF);
-
-			// Send the content of the HTTP.
-			outToClient.writeBytes(entityBody) ;
-		} catch (IOException e) {
-
-		}	
+	private void sendDataToClient(DataOutputStream outToClient, File resource) throws IOException {
+		String entityBody = Utils.readFile(resource);
+		
+		// Send a blank line to indicate the end of the header lines.
+		outToClient.writeBytes(Utils.CRLF);
+		
+		// Send file
+		//TODO: deal with different file types
+		outToClient.writeBytes(entityBody);
 	}
 }
 
 
+//switch (httpRequest.getMethod()) {
+//case Utils.GET:
+//	break;
+//case Utils.POST:
+//	break;
+//case Utils.HEAD:
+//	break;
+//case Utils.TRACE:
+//	break;
+//default:
+//	break;
+//}
+//switch(httpRequest.getHeader(Utils.CONTENT_TYPE)){
+//case Utils.IMAGE:
+//	break;
+//case Utils.ICON:
+//	break;
+//case Utils.TEXT_HTML:
+//	break;
+//default:
+//	break;	
+//}
