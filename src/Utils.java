@@ -15,14 +15,22 @@ public class Utils {
 	final protected static String POST = "POST";
 	final protected static String HEAD = "HEAD";
 	final protected static String TRACE = "TRACE";
+	final protected static String OPTIONS1 = "OPTIONS";//TODO: IMPLEMENT
 	
-	// Bonus
-	final protected static String OPTIONS = "OPTIONS";
+	// Headers
+	final protected static String CONTENT_TYPE = "Content-Type";
+	final protected static String CONTENT_LENGTH = "Content-Length";
+	
+	// Content Types
+	final protected static String IMAGE = "image";
+	final protected static String ICON = "icon";
+	final protected static String TEXT_HTML = "text/html";
+	final protected static String APPLICATION_OCTET_STREAM = "application/octet-stream";
 	
 	// Responses
 	final protected static String OK = "200 OK";
 	final protected static String NOT_FOUND = "404 Not Found";
-	final protected static String NOT_IMPLEMENTED = "501 Not Implemented";
+	final protected static String NOT_IMPLEMENTED = "501 Not Implemented";//TODO: catch these cases
 	final protected static String BAD_REQUEST = "400 Bad Request";
 	final protected static String ERROR = "500 Internal Server Error";
 	

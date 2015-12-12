@@ -103,38 +103,10 @@ public class RequestHandler implements Runnable {
 	}
 
 	private void processResponse(DataOutputStream outToClient, HTTPRequest httpRequest) {
-		// Construct the response message.
-		String statusLine = httpRequest.getHTTPVersion() + " ";
-		String contentTypeLine = "Content-Type: text/html" + Utils.CRLF;
-		String contentLength = "Content-Length: ";
 		
-		if(httpRequest.isBadRequest()){
-			statusLine += Utils.BAD_REQUEST + Utils.CRLF;
-		} else {
-			statusLine += Utils.OK + Utils.CRLF;
-		}
-
-		
-		/*// Create the appropriate httpMethod instance according to the string input.
-		HttpMethod httpMethod = null;
-		try {
-			httpMethod = (HttpMethod) Class.forName("Method" + httpRequest.getMethod()).getConstructor().newInstance();
-		} catch (InstantiationException | IllegalAccessException
-				| IllegalArgumentException | InvocationTargetException
-				| NoSuchMethodException | SecurityException
-				| ClassNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
-		//Call necessary methods
-//		TODO: implement ReturnsDatat.respond() methods for POST and GET
-		System.out.println(httpMethod.getResponseHeader());
-		if (httpMethod instanceof ReturnsData){
-			((ReturnsData) httpMethod).respond(outToClient);
-		}*/
-		
-		
+		String header = getResponseHeader(httpRequest);
+		System.out.println(header);
+		sendDataToClient(httpRequest);
 		
 		
 //		TODO: Sort-of following lines:
@@ -148,7 +120,67 @@ public class RequestHandler implements Runnable {
 //		Print the header.
 		
 //		Send full response to client (including the page content).		
+	}
 
+	private String getResponseHeader(HTTPRequest httpRequest) {
+		
+		if(httpRequest.isBadRequest()){
+			return (httpRequest.getHTTPVersion() + Utils.BAD_REQUEST + Utils.CRLF);
+		}
+
+		String statusLine;
+		String resourcePath;
+
+		// Check if resource is default page
+		if(httpRequest.getResourcePath() == "/"){
+			resourcePath = Utils.DEFUALT_PAGE;
+		}else{
+			resourcePath = httpRequest.getResourcePath();
+		}
+		
+		// Create status-line, Check resource existence
+		File resource = new File(resourcePath);
+		if(resource.exists() && !resource.isDirectory()) {
+			statusLine = httpRequest.getHTTPVersion() + Utils.OK + Utils.CRLF;
+		}else{
+			return httpRequest.getHTTPVersion() + Utils.NOT_FOUND + Utils.CRLF;
+		}
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append(statusLine);
+		
+		//TODO: Get all necessary headers and append to make response header.
+		
+		
+		
+		return sb.toString();
+		
+//		switch (httpRequest.getMethod()) {
+//		case Utils.GET:
+//			break;
+//		case Utils.POST:
+//			break;
+//		case Utils.HEAD:
+//			break;
+//		case Utils.TRACE:
+//			break;
+//		default:
+//			break;
+//		}
+//		switch(httpRequest.getHeader(Utils.CONTENT_TYPE)){
+//		case Utils.IMAGE:
+//			break;
+//		case Utils.ICON:
+//			break;
+//		case Utils.TEXT_HTML:
+//			break;
+//		default:
+//			break;	
+//		}
+	}
+	
+	private void sendDataToClient(HTTPRequest httpRequest) {
+		//TODO
 		try {
 			String entityBody = Utils.readFile(new File(Utils.ROOT + httpRequest.getPage()));
 			// Send the status line.
@@ -170,17 +202,5 @@ public class RequestHandler implements Runnable {
 		}	
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 

@@ -5,7 +5,7 @@ import java.util.Map.Entry;
 public class HTTPRequest {
 
 	private String method;
-	private String page;
+	private String resourcePath;
 	private String HTTPVersion = Utils.HTTP_VERSION_1_0; //Default
 	private HashMap<String,String> headers;
 	private HashMap<String,String> params;
@@ -18,19 +18,18 @@ public class HTTPRequest {
 		String[] firstLineArr = rawRequest.split(" ");
 		if(firstLineArr.length == 3){
 			this.method = firstLineArr[0].trim();
-			this.page = firstLineArr[1].trim();
+			this.resourcePath = firstLineArr[1].trim();
 			// bonus
 			this.HTTPVersion = firstLineArr[2].trim();
 
 			// If the request is GET, the params are separated by '?' from the
 			// requested page
-			int delim = this.page.indexOf("?");
+			int delim = this.resourcePath.indexOf("?");
 			if(this.method.equals(Utils.GET) && delim > 0){				
-				this.page = this.page.substring(0, delim);
-				if(delim + 1 < page.length()){
-					parseParmas(this.page.substring(delim + 1));
+				this.resourcePath = this.resourcePath.substring(0, delim);
+				if(delim + 1 < resourcePath.length()){
+					parseParmas(this.resourcePath.substring(delim + 1));
 				}
-
 			}
 		} else {
 			this.isBadRequest = true;
@@ -82,8 +81,8 @@ public class HTTPRequest {
 		return this.HTTPVersion;
 	}
 
-	public String getPage() {
-		return this.page;
+	public String getResourcePath() {
+		return this.resourcePath;
 	}
 
 	public String getHeader(String header) { 		
@@ -97,7 +96,7 @@ public class HTTPRequest {
 	public void printRequestDebug(){
 		System.out.println("==================================================");
 		System.out.println("Method: " + this.method); 
-		System.out.println("Page: " + this.page);
+		System.out.println("Page: " + this.resourcePath);
 		if (headers != null){
 			System.out.println("Headers:");
 			for (Entry<String, String> entry : headers.entrySet())
