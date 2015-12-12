@@ -1,4 +1,4 @@
-package httpmethods;
+
 
 
 public abstract class HttpMethod {

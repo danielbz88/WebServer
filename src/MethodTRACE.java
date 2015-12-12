@@ -1,4 +1,4 @@
-package httpmethods;
+
 
 public class MethodTRACE extends HttpMethod{
 

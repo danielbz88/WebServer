@@ -1,6 +1,5 @@
 import java.io.* ;
 import java.net.* ;
-import httpmethods.*;
 
 public final class WebServer {
 
