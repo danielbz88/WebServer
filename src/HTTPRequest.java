@@ -1,5 +1,6 @@
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 
 public class HTTPRequest {
@@ -87,6 +88,18 @@ public class HTTPRequest {
 
 	public String getHeader(String header) { 		
 		return headers.get(header);
+	}
+	
+	public String getAllHeaders(){
+		StringBuilder sb = new StringBuilder();
+		Iterator it = headers.entrySet().iterator();
+	    while (it.hasNext()) {
+	        Map.Entry pair = (Map.Entry)it.next();
+	        System.out.println(pair.getKey() + " = " + pair.getValue());
+	        sb.append(pair.getKey() + ": " + pair.getValue() + Utils.CRLF);
+	        it.remove(); // avoids a ConcurrentModificationException
+	    }
+	    return sb.toString();
 	}
 	
 	public HashMap<String,String> getParams() { 

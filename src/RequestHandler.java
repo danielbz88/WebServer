@@ -104,9 +104,8 @@ public class RequestHandler implements Runnable {
 
 	private void processResponse(DataOutputStream outToClient, HTTPRequest httpRequest) {
 		
-		String header = getResponseHeader(httpRequest);
-		System.out.println(header);
-		sendDataToClient(httpRequest);
+		File resource = respondAndGetResource(httpRequest);		
+		sendDataToClient(resource);
 		
 		
 //		TODO: Sort-of following lines:
@@ -122,10 +121,11 @@ public class RequestHandler implements Runnable {
 //		Send full response to client (including the page content).		
 	}
 
-	private String getResponseHeader(HTTPRequest httpRequest) {
+	private File respondAndGetResource(HTTPRequest httpRequest) {
 		
 		if(httpRequest.isBadRequest()){
-			return (httpRequest.getHTTPVersion() + Utils.BAD_REQUEST + Utils.CRLF);
+			System.out.println(httpRequest.getHTTPVersion() + Utils.BAD_REQUEST + Utils.CRLF);
+			return null;
 		}
 
 		String statusLine;
@@ -143,17 +143,12 @@ public class RequestHandler implements Runnable {
 		if(resource.exists() && !resource.isDirectory()) {
 			statusLine = httpRequest.getHTTPVersion() + Utils.OK + Utils.CRLF;
 		}else{
-			return httpRequest.getHTTPVersion() + Utils.NOT_FOUND + Utils.CRLF;
+			System.out.println(httpRequest.getHTTPVersion() + Utils.NOT_FOUND + Utils.CRLF);
+			return null;
 		}
 		
-		StringBuilder sb = new StringBuilder();
-		sb.append(statusLine);
-		
-		//TODO: Get all necessary headers and append to make response header.
-		
-		
-		
-		return sb.toString();
+		System.out.println(statusLine + httpRequest.getAllHeaders());
+		return resource;
 		
 //		switch (httpRequest.getMethod()) {
 //		case Utils.GET:
@@ -179,8 +174,7 @@ public class RequestHandler implements Runnable {
 //		}
 	}
 	
-	private void sendDataToClient(HTTPRequest httpRequest) {
-		//TODO
+	private void sendDataToClient(File resource) {
 		try {
 			String entityBody = Utils.readFile(new File(Utils.ROOT + httpRequest.getPage()));
 			// Send the status line.
