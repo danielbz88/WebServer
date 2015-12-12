@@ -106,11 +106,15 @@ public class RequestHandler implements Runnable {
 		try {
 			resource = respondAndGetResource(outToClient, httpRequest);
 			
-			//TODO: impelement different method responses
+			//TODO: implement different method responses
 			switch (httpRequest.getMethod()) {
 			case Utils.GET:
+				//TODO
+				sendDataToClient(httpRequest, outToClient, resource);
 				break;
 			case Utils.POST:
+				//TODO
+				sendDataToClient(httpRequest, outToClient, resource);
 				break;
 			case Utils.HEAD:
 				//Do nothing
@@ -122,14 +126,13 @@ public class RequestHandler implements Runnable {
 			default:
 				break;
 			}
-			
-			sendDataToClient(outToClient, resource);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}				
 	}
 
+	
 	private File respondAndGetResource(DataOutputStream outToClient, HTTPRequest httpRequest) throws IOException {
 		
 		if(httpRequest.isBadRequest()){
@@ -160,17 +163,24 @@ public class RequestHandler implements Runnable {
 			return null;
 		}
 		
+		//Start building response header
 		StringBuilder sb = new StringBuilder();
 		sb.append(statusLine);
 		
 		resourceType = getResourceType(resourcePath);
-		sb.append(Utils.CONTENT_TYPE + resourceType);
+		sb.append(Utils.CONTENT_TYPE + resourceType + Utils.CRLF);
 		
 		contentLength = getContentLength(resource);
-		sb.append(Utils.CONTENT_LENGTH + contentLength);
+		sb.append(Utils.CONTENT_LENGTH + contentLength + Utils.CRLF);
 		
-		System.out.println(statusLine + httpRequest.getAllHeaders());
-		outToClient.writeBytes(statusLine + httpRequest.getAllHeaders() + Utils.CRLF);
+		if(httpRequest.isChunked()){
+			sb.append(Utils.HEADER_TRANSFER_ENCODING + "chunked" + Utils.CRLF);
+		}
+		
+		System.out.println(sb.append(Utils.CRLF).toString());
+		outToClient.writeBytes(sb.append(Utils.CRLF).toString());
+		
+		//Return resource file
 		return resource;
 	}
 	
@@ -211,13 +221,30 @@ public class RequestHandler implements Runnable {
 		return type;
 	}
 
-	private void sendDataToClient(DataOutputStream outToClient, File resource) throws IOException {
+	private void sendDataToClient(HTTPRequest httpRequest, DataOutputStream outToClient, File resource) throws IOException {
 		String entityBody = Utils.readFile(resource);
+		byte[] bodyBytes = entityBody.getBytes();
 		
 		// Send file
-		//TODO: deal with different file types
-		//TODO: support chunked - ask Idan
-		outToClient.writeBytes(entityBody);
+		if(httpRequest.isChunked()){
+			int offset = 0;
+			int len = Utils.CHUNK_SIZE;
+			while (offset < bodyBytes.length) {
+				if (offset + len > bodyBytes.length) {
+					len = bodyBytes.length - offset;
+				}
+
+				outToClient.writeBytes(Integer.toHexString(len) + Utils.CRLF);
+				outToClient.write(bodyBytes, offset, len);
+				outToClient.writeBytes(Utils.CRLF);
+
+				offset += len;
+			}
+		}else{
+			outToClient.writeBytes(entityBody);
+		}
+		
+		outToClient.writeBytes("0" + Utils.CRLF + Utils.CRLF);
 	}
 }
 

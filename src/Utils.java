@@ -20,6 +20,7 @@ public class Utils {
 	// Headers
 	final protected static String CONTENT_TYPE = "Content-Type: ";
 	final protected static String CONTENT_LENGTH = "Content-Length: ";
+	final protected static String HEADER_TRANSFER_ENCODING = "Transfer-Encoding: ";
 	
 	// Resource Types
 	final protected static String IMAGE = "image";
@@ -39,6 +40,7 @@ public class Utils {
 	protected static String ROOT;
 	protected static String DEFUALT_PAGE;
 	protected static int MAX_THREADS;
+	protected static int CHUNK_SIZE = 200;
 	
 	protected static boolean parseConfigFile() {
 		int numOfParsedProps = 0;
