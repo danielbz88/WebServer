@@ -129,19 +129,7 @@ public class RequestHandler implements Runnable {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}		
-		
-//		TODO: Sort-of following lines:
-//		Read the file’s content.
-		
-//		Create HTTP response header:
-//		HTTP/1.1 200 OK[CRLF]
-//		content-type: text/html[CRLF]
-//		content-length: <the length of index.html>[CRLF] [CRLF]
-		
-//		Print the header.
-		
-//		Send full response to client (including the page content).		
+		}				
 	}
 
 	private File respondAndGetResource(DataOutputStream outToClient, HTTPRequest httpRequest) throws IOException {
@@ -201,19 +189,23 @@ public class RequestHandler implements Runnable {
 		case "jpg":
 		case "gif":
 		case "png":
+			
 			//Image
 			type = Utils.IMAGE;
 			break;
 		case "ico":
+			
 			//Icon
 			type = Utils.ICON;
 			break;
 		case "txt":
 		case "html":
+			
 			//text/html
 			type = Utils.TEXT_HTML;
 			break;
 		default:
+			
 			//application/octet-stream
 			type = Utils.APPLICATION_OCTET_STREAM;
 			break;
@@ -227,7 +219,7 @@ public class RequestHandler implements Runnable {
 		
 		// Send file
 		//TODO: deal with different file types
-		//TODO: support chunked
+		//TODO: support chunked - ask Idan
 		outToClient.writeBytes(entityBody);
 	}
 }
