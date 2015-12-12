@@ -11,6 +11,7 @@ public class HTTPRequest {
 	private HashMap<String,String> headers;
 	private HashMap<String,String> params;
 	private boolean isBadRequest = false;
+	private boolean isChunked = false;
 
 	// Parse from a string like 'GET /index.html HTTP/1.1'
 	public HTTPRequest(String rawRequest) {
@@ -83,6 +84,10 @@ public class HTTPRequest {
 		return this.isBadRequest;
 	}
 	
+	public boolean isChunked() {
+		return this.isChunked;
+	}
+	
 	public String getHTTPVersion() { 
 		return this.HTTPVersion;
 	}
@@ -135,6 +140,10 @@ public class HTTPRequest {
 	public void validate() {
 		if(this.HTTPVersion.equals(Utils.HTTP_VERSION_1_1)){
 			this.isBadRequest &= this.headers.containsKey("Host");
+		}
+		if(this.headers.get("chunked") != null){
+			String value = (String) this.headers.get("chunked");
+			this.isChunked = value.equals("yes");
 		}
 
 	}
