@@ -19,9 +19,9 @@ public class Utils {
 	//TODO: Move all Utils.METHOD references to Enums 
 	
 	// Headers
-	final protected static String CONTENT_TYPE = "Content-Type: ";
-	final protected static String CONTENT_LENGTH = "Content-Length: ";
-	final protected static String HEADER_TRANSFER_ENCODING = "Transfer-Encoding: ";
+	final protected static String CONTENT_TYPE = "Content-Type";
+	final protected static String CONTENT_LENGTH = "Content-Length";
+	final protected static String HEADER_TRANSFER_ENCODING = "Transfer-Encoding";
 	
 	// Resource Types
 	final protected static String IMAGE = "image";
@@ -91,5 +91,48 @@ public class Utils {
 		}
 		fis.close();
 		return bFile;
+	}
+	
+	// return null if the file doesnt exists
+	public static File getResuorce(String resourcePath) {
+		File resource = null;
+		if(resourcePath.equals("/")){
+			resource = new File(ROOT + "/" + DEFUALT_PAGE);
+		} else {
+			resource = new File(ROOT + resourcePath);
+		}
+		
+		// check if file exists
+		if(!resource.exists() || resource.isDirectory()){
+			resource = null;
+		}
+		
+		return resource;
+	}
+
+	public static boolean IsMethodSupported(String method) {
+		boolean isSupportedMethod = false;
+		switch(method){
+		case Utils.GET:
+			isSupportedMethod = true;
+			break;
+		case Utils.POST:
+			isSupportedMethod = true;
+			break;
+		case Utils.TRACE:
+			isSupportedMethod = true;
+			break;
+		case Utils.HEAD:
+			isSupportedMethod = true;
+			break;
+		case Utils.OPTIONS:
+			isSupportedMethod = true;
+			break;
+		default:
+			isSupportedMethod = false;
+			break;
+		}
+		
+		return isSupportedMethod;
 	}
 }

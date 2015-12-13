@@ -5,14 +5,14 @@ import java.util.Map.Entry;
 
 public class HTTPRequest {
 
-	private httpMethod method;
+	private String method;
 	private String resourcePath;
 	private String HTTPVersion = Utils.HTTP_VERSION_1_0; //Default
 	private HashMap<String,String> headers;
 	private HashMap<String,String> params;
 	private boolean isBadRequest = false;
 	private boolean isChunked = false;
-	private boolean isSupportedMethod = true;
+	private boolean isSupportedMethod;
 
 	// Parse from a string like 'GET /index.html HTTP/1.1'
 	public HTTPRequest(String rawRequest) {
@@ -21,16 +21,9 @@ public class HTTPRequest {
 		String[] firstLineArr = rawRequest.split(" ");
 		if(firstLineArr.length == 3){
 			
-			// Parse method and check if it's supported
-			try {
-				this.method = httpMethod.valueOf(firstLineArr[0].trim().toUpperCase());
-			} catch (IllegalArgumentException e) {
-				this.isSupportedMethod = false;
-				this.method = httpMethod.UNIMPLEMENTED;
-			}			
-			
+			this.method = firstLineArr[0].trim();
+			this.isSupportedMethod = Utils.IsMethodSupported(this.method);
 			this.resourcePath = firstLineArr[1].trim();
-			// bonus
 			this.HTTPVersion = firstLineArr[2].trim();
 
 			// the params are separated by '?' from the requested page
@@ -82,7 +75,7 @@ public class HTTPRequest {
 
 	}
 
-	public httpMethod getMethod() { 
+	public String getMethod() { 
 		return this.method;
 	}
 	
@@ -125,6 +118,18 @@ public class HTTPRequest {
 		return params;
 	}
 
+	// Validate the request is up to standards 
+	public void validate() {
+		if(this.HTTPVersion.equals(Utils.HTTP_VERSION_1_1)){
+			this.isBadRequest &= this.headers.containsKey("Host");
+		}
+		if(this.headers.get("chunked") != null){
+			String value = (String) this.headers.get("chunked");
+			this.isChunked = value.equals("yes");
+		}
+
+	}
+	
 	public void printRequestDebug(){
 		System.out.println("==================================================");
 		System.out.println("Method: " + this.method); 
@@ -144,17 +149,5 @@ public class HTTPRequest {
 			}
 		}	
 		System.out.println("==================================================");
-	}
-
-	// Validate the request is up to standards 
-	public void validate() {
-		if(this.HTTPVersion.equals(Utils.HTTP_VERSION_1_1)){
-			this.isBadRequest &= this.headers.containsKey("Host");
-		}
-		if(this.headers.get("chunked") != null){
-			String value = (String) this.headers.get("chunked");
-			this.isChunked = value.equals("yes");
-		}
-
 	}
 }
