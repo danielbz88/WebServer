@@ -75,7 +75,7 @@ public class RequestHandler implements Runnable {
 
 		// if the request is 'POST'
 		// we continue to read additional 'Content-Length' characters as parameters
-		if(httpRequest.getMethod().equals(Utils.POST)){
+		if(httpRequest.getMethod().equals(httpMethod.POST)){
 			StringBuilder params = new StringBuilder();			
 			String contentLength = httpRequest.getHeader("Content-Length");
 			if(contentLength != null){
@@ -108,20 +108,24 @@ public class RequestHandler implements Runnable {
 			
 			//TODO: implement different method responses
 			switch (httpRequest.getMethod()) {
-			case Utils.GET:
+			case GET:
 				//TODO
 				sendDataToClient(httpRequest, outToClient, resource);
 				break;
-			case Utils.POST:
+			case POST:
 				//TODO
 				sendDataToClient(httpRequest, outToClient, resource);
 				break;
-			case Utils.HEAD:
+			case HEAD:
 				//Do nothing
 				return;
-			case Utils.TRACE:
+			case TRACE:
 				//Send back the headers from request
 				outToClient.writeBytes(httpRequest.getAllHeaders());
+				break;
+			case OPTIONS:
+				//TODO
+				optionsResonse(outToClient);
 				break;
 			default:
 				break;
@@ -132,11 +136,27 @@ public class RequestHandler implements Runnable {
 		}				
 	}
 	
+	private void optionsResonse(DataOutputStream outToClient) {
+//TODO:implement
+		StringBuilder sb = new StringBuilder();
+		for (httpMethod method : httpMethod.values()) {
+			sb.append(method + ", ");
+		}
+		
+		String allMethods = sb.toString();
+	}
+
 	private File respondAndGetResource(DataOutputStream outToClient, HTTPRequest httpRequest) throws IOException {
 		
 		if(httpRequest.isBadRequest()){
 			System.out.println(httpRequest.getHTTPVersion() + Utils.BAD_REQUEST + Utils.CRLF + Utils.CRLF);
 			outToClient.writeBytes(httpRequest.getHTTPVersion() + Utils.BAD_REQUEST + Utils.CRLF + Utils.CRLF);
+			return null;
+		}
+		
+		if(!httpRequest.isSupportedMethod()){
+			System.out.println(httpRequest.getHTTPVersion() + Utils.NOT_IMPLEMENTED + Utils.CRLF + Utils.CRLF);
+			outToClient.writeBytes(httpRequest.getHTTPVersion() + Utils.NOT_IMPLEMENTED + Utils.CRLF + Utils.CRLF);
 			return null;
 		}
 
@@ -219,6 +239,12 @@ public class RequestHandler implements Runnable {
 		
 		return type;
 	}
+	
+	private String getBasicHeader(){
+		
+	}
+	
+	
 
 	private void sendDataToClient(HTTPRequest httpRequest, DataOutputStream outToClient, File resource) throws IOException {
 		String entityBody = Utils.readFile(resource);

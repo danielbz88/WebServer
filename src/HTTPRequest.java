@@ -5,13 +5,14 @@ import java.util.Map.Entry;
 
 public class HTTPRequest {
 
-	private String method;
+	private httpMethod method;
 	private String resourcePath;
 	private String HTTPVersion = Utils.HTTP_VERSION_1_0; //Default
 	private HashMap<String,String> headers;
 	private HashMap<String,String> params;
 	private boolean isBadRequest = false;
 	private boolean isChunked = false;
+	private boolean isSupportedMethod = true;
 
 	// Parse from a string like 'GET /index.html HTTP/1.1'
 	public HTTPRequest(String rawRequest) {
@@ -19,7 +20,15 @@ public class HTTPRequest {
 		this.params = new HashMap<>();
 		String[] firstLineArr = rawRequest.split(" ");
 		if(firstLineArr.length == 3){
-			this.method = firstLineArr[0].trim();
+			
+			// Parse method and check if it's supported
+			try {
+				this.method = httpMethod.valueOf(firstLineArr[0].trim().toUpperCase());
+			} catch (IllegalArgumentException e) {
+				this.method = null;
+				this.isSupportedMethod = false;
+			}			
+			
 			this.resourcePath = firstLineArr[1].trim();
 			// bonus
 			this.HTTPVersion = firstLineArr[2].trim();
@@ -28,7 +37,7 @@ public class HTTPRequest {
 			// requested page
 			//TODO: What about POST? and Unimplemented methods
 			int delim = this.resourcePath.indexOf("?");
-			if(this.method.equals(Utils.GET) && delim > 0){				
+			if(this.method.equals(httpMethod.GET) && delim > 0){				
 				this.resourcePath = this.resourcePath.substring(0, delim);
 				if(delim + 1 < resourcePath.length()){
 					parseParmas(this.resourcePath.substring(delim + 1));
@@ -75,8 +84,7 @@ public class HTTPRequest {
 
 	}
 
-
-	public String getMethod() { 
+	public httpMethod getMethod() { 
 		return this.method;
 	}
 	
@@ -86,6 +94,10 @@ public class HTTPRequest {
 	
 	public boolean isChunked() {
 		return this.isChunked;
+	}
+	
+	public boolean isSupportedMethod() {
+		return this.isSupportedMethod;
 	}
 	
 	public String getHTTPVersion() { 

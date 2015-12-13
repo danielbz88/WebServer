@@ -15,7 +15,8 @@ public class Utils {
 	final protected static String POST = "POST";
 	final protected static String HEAD = "HEAD";
 	final protected static String TRACE = "TRACE";
-	final protected static String OPTIONS = "OPTIONS";//TODO: IMPLEMENT
+	final protected static String OPTIONS = "OPTIONS";
+	//TODO: Move all Utils.METHOD references to Enums 
 	
 	// Headers
 	final protected static String CONTENT_TYPE = "Content-Type: ";
