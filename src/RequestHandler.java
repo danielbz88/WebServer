@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.lang.Class;
-import java.lang.reflect.InvocationTargetException;
 
 public class RequestHandler implements Runnable {
 	private SynchronizedQueue<Socket> jobsQueue;
@@ -101,31 +99,39 @@ public class RequestHandler implements Runnable {
 	}
 
 	private void processResponse(DataOutputStream outToClient, HTTPRequest httpRequest) {
-		
-		File resource;
 		try {
-			resource = respondAndGetResource(outToClient, httpRequest);
 			
-			//TODO: implement different method responses
+			String resourcePath;
+
+			// Check if resource is default page
+			if(httpRequest.getResourcePath() == "/"){
+				resourcePath = Utils.DEFUALT_PAGE;
+			}else{
+				resourcePath = httpRequest.getResourcePath();
+			}
+			
+			File resource = new File(resourcePath);
+			String header = getBasicHeader(httpRequest, resource);
+			
 			switch (httpRequest.getMethod()) {
 			case GET:
-				//TODO
+				sendHeaderToClient(header, outToClient);
 				sendDataToClient(httpRequest, outToClient, resource);
 				break;
 			case POST:
-				//TODO
+				//TODO: Figure out difference between GET and POST and implement
+				sendHeaderToClient(header, outToClient);
 				sendDataToClient(httpRequest, outToClient, resource);
 				break;
 			case HEAD:
+				sendHeaderToClient(header, outToClient);
 				//Do nothing
 				return;
 			case TRACE:
-				//Send back the headers from request
-				outToClient.writeBytes(httpRequest.getAllHeaders());
+				traceResonse(header, httpRequest, outToClient);
 				break;
 			case OPTIONS:
-				//TODO
-				optionsResonse(outToClient);
+				optionsResonse(header, outToClient);
 				break;
 			default:
 				break;
@@ -136,71 +142,33 @@ public class RequestHandler implements Runnable {
 		}				
 	}
 	
-	private void optionsResonse(DataOutputStream outToClient) {
-//TODO:implement
+	private void traceResonse(String header, HTTPRequest httpRequest, DataOutputStream outToClient) throws IOException {
+		
+		//send HTTP response header
+		sendHeaderToClient(header, outToClient);
+		
+		//display back the headers from the request
+		String response = httpRequest.getAllHeaders();
+		int len = response.length();
+		String output = len + Utils.CRLF + httpRequest.getAllHeaders();
+		System.out.println(output);
+		outToClient.writeBytes(output);
+	}
+
+	//Prints and sends given header out to client, after appending the header end mark: CRLF
+	private void sendHeaderToClient(String header,  DataOutputStream outputStream) throws IOException {
+		System.out.println(header + Utils.CRLF);
+		outputStream.writeBytes(header + Utils.CRLF);
+	}
+
+	//Appends options header and sends to client.
+	private void optionsResonse(String basicHeader, DataOutputStream outToClient) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		for (httpMethod method : httpMethod.values()) {
 			sb.append(method + ", ");
 		}
 		
-		String allMethods = sb.toString();
-	}
-
-	private File respondAndGetResource(DataOutputStream outToClient, HTTPRequest httpRequest) throws IOException {
-		
-		if(httpRequest.isBadRequest()){
-			System.out.println(httpRequest.getHTTPVersion() + Utils.BAD_REQUEST + Utils.CRLF + Utils.CRLF);
-			outToClient.writeBytes(httpRequest.getHTTPVersion() + Utils.BAD_REQUEST + Utils.CRLF + Utils.CRLF);
-			return null;
-		}
-		
-		if(!httpRequest.isSupportedMethod()){
-			System.out.println(httpRequest.getHTTPVersion() + Utils.NOT_IMPLEMENTED + Utils.CRLF + Utils.CRLF);
-			outToClient.writeBytes(httpRequest.getHTTPVersion() + Utils.NOT_IMPLEMENTED + Utils.CRLF + Utils.CRLF);
-			return null;
-		}
-
-		String statusLine;
-		String resourcePath;
-		String resourceType;
-		int contentLength = 0;
-
-		// Check if resource is default page
-		if(httpRequest.getResourcePath() == "/"){
-			resourcePath = Utils.DEFUALT_PAGE;
-		}else{
-			resourcePath = httpRequest.getResourcePath();
-		}
-		
-		// Create status-line, Check resource existence
-		File resource = new File(resourcePath);
-		if(resource.exists() && !resource.isDirectory()) {
-			statusLine = httpRequest.getHTTPVersion() + Utils.OK + Utils.CRLF;
-		}else{
-			System.out.println(httpRequest.getHTTPVersion() + Utils.NOT_FOUND + Utils.CRLF + Utils.CRLF);
-			outToClient.writeBytes(httpRequest.getHTTPVersion() + Utils.NOT_FOUND + Utils.CRLF + Utils.CRLF);
-			return null;
-		}
-		
-		//Start building response header
-		StringBuilder sb = new StringBuilder();
-		sb.append(statusLine);
-		
-		resourceType = getResourceType(resourcePath);
-		sb.append(Utils.CONTENT_TYPE + resourceType + Utils.CRLF);
-		
-		contentLength = getContentLength(resource);
-		sb.append(Utils.CONTENT_LENGTH + contentLength + Utils.CRLF);
-		
-		if(httpRequest.isChunked()){
-			sb.append(Utils.HEADER_TRANSFER_ENCODING + "chunked" + Utils.CRLF);
-		}
-		
-		System.out.println(sb.append(Utils.CRLF).toString());
-		outToClient.writeBytes(sb.append(Utils.CRLF).toString());
-		
-		//Return resource file
-		return resource;
+		sendHeaderToClient(basicHeader + sb.toString(), outToClient);
 	}
 	
 	private int getContentLength(File resource) {
@@ -240,8 +208,47 @@ public class RequestHandler implements Runnable {
 		return type;
 	}
 	
-	private String getBasicHeader(){
+	private String getBasicHeader(HTTPRequest httpRequest, File resource){
+		String outputHeader = null;
 		
+		if(httpRequest.isBadRequest()){
+			outputHeader = httpRequest.getHTTPVersion() + Utils.BAD_REQUEST + Utils.CRLF + Utils.CRLF;
+		}
+		
+		if(!httpRequest.isSupportedMethod()){
+			outputHeader = httpRequest.getHTTPVersion() + Utils.NOT_IMPLEMENTED + Utils.CRLF + Utils.CRLF;
+		}
+		
+
+		// Check resource existence, create header
+		if(resource.exists() && !resource.isDirectory()) {
+			//Start building response header
+			StringBuilder sb = new StringBuilder();
+			
+			//append status-line
+			sb.append(httpRequest.getHTTPVersion() + Utils.OK + Utils.CRLF);
+			
+			//append content-type header
+			sb.append(Utils.CONTENT_TYPE + getResourceType(resource.getAbsolutePath()) + Utils.CRLF);
+			
+			
+			
+			if(httpRequest.isChunked()){
+				sb.append(Utils.HEADER_TRANSFER_ENCODING + "chunked" + Utils.CRLF);
+			}else{
+				
+				//append content-length header
+				sb.append(Utils.CONTENT_LENGTH + getContentLength(resource) + Utils.CRLF);
+			}
+			
+			outputHeader = sb.toString();
+			
+		}else{
+			outputHeader = httpRequest.getHTTPVersion() + Utils.NOT_FOUND + Utils.CRLF;
+		}
+		
+		//return header
+		return outputHeader;
 	}
 	
 	
