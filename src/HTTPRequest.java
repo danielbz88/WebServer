@@ -25,19 +25,17 @@ public class HTTPRequest {
 			try {
 				this.method = httpMethod.valueOf(firstLineArr[0].trim().toUpperCase());
 			} catch (IllegalArgumentException e) {
-				this.method = null;
 				this.isSupportedMethod = false;
+				this.method = httpMethod.UNIMPLEMENTED;
 			}			
 			
 			this.resourcePath = firstLineArr[1].trim();
 			// bonus
 			this.HTTPVersion = firstLineArr[2].trim();
 
-			// If the request is GET, the params are separated by '?' from the
-			// requested page
-			//TODO: What about POST? and Unimplemented methods
+			// the params are separated by '?' from the requested page
 			int delim = this.resourcePath.indexOf("?");
-			if(this.method.equals(httpMethod.GET) && delim > 0){				
+			if(delim > 0){				
 				this.resourcePath = this.resourcePath.substring(0, delim);
 				if(delim + 1 < resourcePath.length()){
 					parseParmas(this.resourcePath.substring(delim + 1));

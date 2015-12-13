@@ -23,7 +23,7 @@ public class RequestHandler implements Runnable {
 			try{
 				// Set the time we wait for the client to write a new-line
 				// to 10 seconds
-				socket.setSoTimeout(10000);
+				//socket.setSoTimeout(10000);
 				BufferedReader inFromClient =
 						new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				DataOutputStream outToClient =
@@ -58,33 +58,37 @@ public class RequestHandler implements Runnable {
 
 		firstLine = line;
 		httpRequest = new HTTPRequest(firstLine);
-
-		// Read lines until we recognize an empty line
-		line = inFromClient.readLine();
-		while(!line.equals("")){
-			requestHeaders.append(line + Utils.CRLF);
+		
+		if(!httpRequest.isBadRequest() && httpRequest.isSupportedMethod()){
+			// Read lines until we recognize an empty line
 			line = inFromClient.readLine();
-		}
-
-		// parse the headers
-		if(requestHeaders.length() > 0) {
-			httpRequest.parseHeaders(requestHeaders.toString());
-		}
-
-		// if the request is 'POST'
-		// we continue to read additional 'Content-Length' characters as parameters
-		if(httpRequest.getMethod().equals(httpMethod.POST)){
-			StringBuilder params = new StringBuilder();			
-			String contentLength = httpRequest.getHeader("Content-Length");
-			if(contentLength != null){
-				int charactersToRead = Integer.parseInt(contentLength);		
-				for (int i = 0; i < charactersToRead ; i++) {
-					params.append((char) inFromClient.read());
-				}
-
-				httpRequest.parseParmas(params.toString());
+			while(!line.equals("")){
+				requestHeaders.append(line + Utils.CRLF);
+				line = inFromClient.readLine();
 			}
+
+			// parse the headers
+			if(requestHeaders.length() > 0) {
+				httpRequest.parseHeaders(requestHeaders.toString());
+			}
+
+			// if the request is 'POST'
+			// we continue to read additional 'Content-Length' characters as parameters
+			if(httpRequest.getMethod().equals(httpMethod.POST)){
+				StringBuilder params = new StringBuilder();			
+				String contentLength = httpRequest.getHeader("Content-Length");
+				if(contentLength != null){
+					int charactersToRead = Integer.parseInt(contentLength);		
+					for (int i = 0; i < charactersToRead ; i++) {
+						params.append((char) inFromClient.read());
+					}
+
+					httpRequest.parseParmas(params.toString());
+				}
+			}	
 		}
+
+		
 
 		/*// Print the request header
 		System.out.println("Thread " + this.id + " processing request:");
@@ -102,12 +106,12 @@ public class RequestHandler implements Runnable {
 		try {
 			
 			String resourcePath;
-
+			
 			// Check if resource is default page
-			if(httpRequest.getResourcePath() == "/"){
-				resourcePath = Utils.DEFUALT_PAGE;
+			if(httpRequest.getResourcePath().equals("/")){ // ^&^ you were using'==' instead of 'equels'
+				resourcePath = Utils.ROOT + "/" + Utils.DEFUALT_PAGE; // ^&^ you were missing 'Utils.ROOT'
 			}else{
-				resourcePath = httpRequest.getResourcePath();
+				resourcePath = Utils.ROOT + httpRequest.getResourcePath(); // ^&^ you were missing 'Utils.ROOT'
 			}
 			
 			File resource = new File(resourcePath);
@@ -133,7 +137,8 @@ public class RequestHandler implements Runnable {
 			case OPTIONS:
 				optionsResonse(header, outToClient);
 				break;
-			default:
+			default: // ^&^  case of an Error
+				sendHeaderToClient(header, outToClient);
 				break;
 			}
 		} catch (IOException e) {
@@ -174,65 +179,66 @@ public class RequestHandler implements Runnable {
 	private int getContentLength(File resource) {
 		return (int)resource.length();
 	}
-
+	
 	private String getResourceType(String resourcePath) {
 		String type;		
-		String[] tokens = resourcePath.split(".");
-		switch(tokens[tokens.length - 1]){
+		int delim = resourcePath.indexOf('.'); // ^&^ replaced 'split' method with 'indexOf'
+		String suffix = resourcePath.substring(delim + 1);
+		switch(suffix){
 		case "bmp":
 		case "jpg":
 		case "gif":
 		case "png":
-			
+
 			//Image
 			type = Utils.IMAGE;
 			break;
 		case "ico":
-			
+
 			//Icon
 			type = Utils.ICON;
 			break;
 		case "txt":
 		case "html":
-			
+
 			//text/html
 			type = Utils.TEXT_HTML;
 			break;
 		default:
-			
+
 			//application/octet-stream
 			type = Utils.APPLICATION_OCTET_STREAM;
 			break;
 		}
-		
+
 		return type;
 	}
 	
 	private String getBasicHeader(HTTPRequest httpRequest, File resource){
-		String outputHeader = null;
+		String outputHeader = "HTTP/1.1 "; // ^&^ server has to be 1.1 
 		
+		// ^&^ added 'else' because your flow wasn't correct
 		if(httpRequest.isBadRequest()){
-			outputHeader = httpRequest.getHTTPVersion() + Utils.BAD_REQUEST + Utils.CRLF + Utils.CRLF;
+			outputHeader += Utils.BAD_REQUEST + Utils.CRLF + Utils.CRLF;
 		}
 		
-		if(!httpRequest.isSupportedMethod()){
-			outputHeader = httpRequest.getHTTPVersion() + Utils.NOT_IMPLEMENTED + Utils.CRLF + Utils.CRLF;
+		else if(!httpRequest.isSupportedMethod()){
+			outputHeader += Utils.NOT_IMPLEMENTED + Utils.CRLF + Utils.CRLF;
 		}
-		
-
-		// Check resource existence, create header
-		if(resource.exists() && !resource.isDirectory()) {
+		// Check resource existence
+		else if(!resource.exists() || resource.isDirectory()) {
+			outputHeader = httpRequest.getHTTPVersion() + Utils.NOT_FOUND + Utils.CRLF;
+			
+		} else { 
 			//Start building response header
 			StringBuilder sb = new StringBuilder();
 			
 			//append status-line
-			sb.append(httpRequest.getHTTPVersion() + Utils.OK + Utils.CRLF);
+			sb.append(Utils.OK + Utils.CRLF);
 			
 			//append content-type header
 			sb.append(Utils.CONTENT_TYPE + getResourceType(resource.getAbsolutePath()) + Utils.CRLF);
-			
-			
-			
+					
 			if(httpRequest.isChunked()){
 				sb.append(Utils.HEADER_TRANSFER_ENCODING + "chunked" + Utils.CRLF);
 			}else{
@@ -243,8 +249,6 @@ public class RequestHandler implements Runnable {
 			
 			outputHeader = sb.toString();
 			
-		}else{
-			outputHeader = httpRequest.getHTTPVersion() + Utils.NOT_FOUND + Utils.CRLF;
 		}
 		
 		//return header
@@ -252,28 +256,28 @@ public class RequestHandler implements Runnable {
 	}
 	
 	
-
+	// ^&^ We are now working only with bytes no need to read files as Strings
 	private void sendDataToClient(HTTPRequest httpRequest, DataOutputStream outToClient, File resource) throws IOException {
-		String entityBody = Utils.readFile(resource);
-		byte[] bodyBytes = entityBody.getBytes();
+		byte[] entityBody = Utils.readFile(resource);
 		
 		// Send file
 		if(httpRequest.isChunked()){
 			int offset = 0;
 			int len = Utils.CHUNK_SIZE;
-			while (offset < bodyBytes.length) {
-				if (offset + len > bodyBytes.length) {
-					len = bodyBytes.length - offset;
+			while (offset < entityBody.length) {
+				if (offset + len > entityBody.length) {
+					len = entityBody.length - offset;
 				}
 
 				outToClient.writeBytes(Integer.toHexString(len) + Utils.CRLF);
-				outToClient.write(bodyBytes, offset, len);
+				outToClient.write(entityBody, offset, len);
 				outToClient.writeBytes(Utils.CRLF);
 
 				offset += len;
 			}
 		}else{
-			outToClient.writeBytes(entityBody);
+			outToClient.write(entityBody, 0, entityBody.length);
+			//outToClient.writeBytes(entityBody);
 		}
 		
 		outToClient.writeBytes("0" + Utils.CRLF + Utils.CRLF);

@@ -46,7 +46,7 @@ public class Utils {
 	protected static boolean parseConfigFile() {
 		int numOfParsedProps = 0;
 		try {
-			String rawConfigFile = readFile(new File("config.ini"));
+			String rawConfigFile = new String(readFile(new File("config.ini")));
 			String[] properties = rawConfigFile.split("\n");
 			for (String property : properties) {
 				int delim = property.indexOf('=');
@@ -79,10 +79,9 @@ public class Utils {
 		
 		return (numOfParsedProps == 4);		
 	}
-
-
-	protected static String readFile(File file) throws IOException {
-		String rawConfigFile = "";
+	
+	protected static byte[] readFile(File file) throws IOException
+	{
 		FileInputStream fis = new FileInputStream(file);
 		byte[] bFile = new byte[(int)file.length()];
 		// read until the end of the stream.
@@ -91,8 +90,6 @@ public class Utils {
 			fis.read(bFile, 0, bFile.length);
 		}
 		fis.close();
-		rawConfigFile = new String(bFile);
-		
-		return rawConfigFile;
+		return bFile;
 	}
 }
