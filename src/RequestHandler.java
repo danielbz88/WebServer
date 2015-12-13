@@ -59,14 +59,14 @@ public class RequestHandler implements Runnable {
 		firstLine = line;
 		httpRequest = new HTTPRequest(firstLine);
 		
-		if(!httpRequest.isBadRequest() && httpRequest.isSupportedMethod()){
-			// Read lines until we recognize an empty line
+		// Read lines until we recognize an empty line
+		line = inFromClient.readLine();
+		while(!line.equals("")){
+			requestHeaders.append(line + Utils.CRLF);
 			line = inFromClient.readLine();
-			while(!line.equals("")){
-				requestHeaders.append(line + Utils.CRLF);
-				line = inFromClient.readLine();
-			}
-
+		}
+		
+		if(!httpRequest.isBadRequest() && httpRequest.isSupportedMethod()){
 			// parse the headers
 			if(requestHeaders.length() > 0) {
 				httpRequest.parseHeaders(requestHeaders.toString());
@@ -102,21 +102,49 @@ public class RequestHandler implements Runnable {
 		return httpRequest;
 	}
 
-	private void processResponse(DataOutputStream outToClient, HTTPRequest httpRequest) {
+	private void processResponse(DataOutputStream outToClient, HTTPRequest httpRequest) throws IOException {
+		HTTPResponse httpResponse = new HTTPResponse(httpRequest);
+		httpResponse.makeResponse();
+		
+		// Write response
+		outToClient.writeBytes(httpResponse.getResponseCode() + Utils.CRLF);
+		outToClient.writeBytes(httpResponse.getResponseHeaders() + Utils.CRLF);
+		
+		httpResponse.printResponseDebug();
+		
+		byte[] entityBody = httpResponse.getResponseBody();
+		
+		if(entityBody != null){
+			if(httpRequest.isChunked()){
+				writeChuncked(outToClient, entityBody);
+			} else {
+				outToClient.write(entityBody, 0, entityBody.length);
+			}
+		}	
+					
+	}
+	
+	private void writeChuncked(DataOutputStream outToClient, byte[] responseBody) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	
+	/*private void processResponse(DataOutputStream outToClient, HTTPRequest httpRequest) throws IOException {	
 		try {
-			
+
 			String resourcePath;
-			
+
 			// Check if resource is default page
 			if(httpRequest.getResourcePath().equals("/")){ // ^&^ you were using'==' instead of 'equels'
 				resourcePath = Utils.ROOT + "/" + Utils.DEFUALT_PAGE; // ^&^ you were missing 'Utils.ROOT'
 			}else{
 				resourcePath = Utils.ROOT + httpRequest.getResourcePath(); // ^&^ you were missing 'Utils.ROOT'
 			}
-			
+
 			File resource = new File(resourcePath);
 			String header = getBasicHeader(httpRequest, resource);
-			
+
 			switch (httpRequest.getMethod()) {
 			case GET:
 				sendHeaderToClient(header, outToClient);
@@ -144,10 +172,12 @@ public class RequestHandler implements Runnable {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}				
-	}
+		}	
+	}*/
 	
-	private void traceResonse(String header, HTTPRequest httpRequest, DataOutputStream outToClient) throws IOException {
+	
+
+	/*private void traceResonse(String header, HTTPRequest httpRequest, DataOutputStream outToClient) throws IOException {
 		
 		//send HTTP response header
 		sendHeaderToClient(header, outToClient);
@@ -281,5 +311,5 @@ public class RequestHandler implements Runnable {
 		}
 		
 		outToClient.writeBytes("0" + Utils.CRLF + Utils.CRLF);
-	}
+	}*/
 }
