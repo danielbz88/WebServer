@@ -34,7 +34,7 @@ public class ThreadPool {
 		// If we didn't reach maxThreads we create another one
 		if(numOfActiveThreads < maxThreads){
 			numOfActiveThreads++;
-			System.out.println("Creatring thread " + this.numOfActiveThreads);
+			System.out.println("Creating thread " + this.numOfActiveThreads);
 			RequestHandler requestHandler = new RequestHandler(this.requestQueue, this.numOfActiveThreads);
 			Thread thread = new Thread(requestHandler);
 			thread.start();

@@ -74,7 +74,7 @@ public class RequestHandler implements Runnable {
 
 			// if the request is 'POST'
 			// we continue to read additional 'Content-Length' characters as parameters
-			if(httpRequest.getMethod().equals(httpMethod.POST)){
+			if(httpRequest.getMethod().equals(Utils.POST)){
 				StringBuilder params = new StringBuilder();			
 				String contentLength = httpRequest.getHeader("Content-Length");
 				if(contentLength != null){
