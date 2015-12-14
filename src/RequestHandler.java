@@ -124,9 +124,20 @@ public class RequestHandler implements Runnable {
 					
 	}
 	
-	private void writeChuncked(DataOutputStream outToClient, byte[] responseBody) {
-		// TODO Auto-generated method stub
-		
+	private void writeChuncked(DataOutputStream outToClient, byte[] responseBody) throws IOException {
+		int offset = 0;
+		int len = Utils.CHUNK_SIZE;
+		while (offset < responseBody.length) {
+			if (offset + len > responseBody.length) {
+				len = responseBody.length - offset;
+			}
+
+			outToClient.writeBytes(Integer.toHexString(len) + Utils.CRLF);
+			outToClient.write(responseBody, offset, len);
+			outToClient.writeBytes(Utils.CRLF);
+
+			offset += len;
+		}
 	}
 	
 	

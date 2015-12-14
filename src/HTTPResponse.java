@@ -59,20 +59,17 @@ public class HTTPResponse {
 	}
 
 	private void optionsResponse() {
-		// TODO Auto-generated method stub
-		
+		this.headers.put("Allow", "GET, POST, HEAD, TRACE, OPTIONS");
 	}
 
 	private void traceResponse() {
-		// Add the headers from the REQUEST
-		File resource = Utils.getResuorce(this.request.getResourcePath());
-		basicResponse(resource);
+		headResponse();
 		this.body = request.getAllHeaders().getBytes();
 	}
 
 	private void headResponse() {
-		// TODO Auto-generated method stub
-		
+		File resource = Utils.getResuorce(this.request.getResourcePath());
+		basicResponse(resource);
 	}
 
 	private void getResponse(){
