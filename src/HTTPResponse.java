@@ -14,7 +14,8 @@ public class HTTPResponse {
 	public HTTPResponse(HTTPRequest request){
 		this.request = request;
 		this.headers = new HashMap<>();
-		headers.put(Utils.CONTENT_TYPE, Utils.TEXT_HTML); // Default 
+//		headers.put(Utils.CONTENT_TYPE, Utils.TEXT_HTML); // Default 
+		// ^%^ This line would cause the server to return the header even if the resource was not found.
 	}
 	
 	protected void makeResponse(){
@@ -28,8 +29,11 @@ public class HTTPResponse {
 			// we have the same behavior in GET and POST
 			switch (request.getMethod()) {
 			case Utils.GET:
+				this.responseCode = Utils.OK;
+				getResponse();
+				break;
 			case Utils.POST:
-				basicResponse();
+				postResponse();
 				break;
 			case Utils.HEAD:
 				this.responseCode = Utils.OK;
@@ -49,14 +53,21 @@ public class HTTPResponse {
 		}
 	}
 
+	private void postResponse() {
+		// TODO Auto-generated method stub
+		
+	}
+
 	private void optionsResponse() {
 		// TODO Auto-generated method stub
 		
 	}
 
 	private void traceResponse() {
-		// TODO Auto-generated method stub
-		
+		// Add the headers from the REQUEST
+		File resource = Utils.getResuorce(this.request.getResourcePath());
+		basicResponse(resource);
+		this.body = request.getAllHeaders().getBytes();
 	}
 
 	private void headResponse() {
@@ -64,8 +75,17 @@ public class HTTPResponse {
 		
 	}
 
-	private void basicResponse() {
+	private void getResponse(){
 		File resource = Utils.getResuorce(this.request.getResourcePath());
+		basicResponse(resource);
+		try {
+			this.body = Utils.readFile(resource);
+		} catch (IOException e) {
+			this.responseCode = Utils.ERROR;
+		}
+	}
+	
+	private void basicResponse(File resource) {
 		if (resource == null){
 			this.responseCode = Utils.NOT_FOUND;
 		} else {
@@ -81,19 +101,9 @@ public class HTTPResponse {
 				//content-length header
 				this.headers.put(Utils.CONTENT_LENGTH, getContentLength(resource));
 			}
-			
-			// make the response body 
-			try {
-				this.body = Utils.readFile(resource);
-			} catch (IOException e) {
-				this.responseCode = Utils.ERROR;
-			}
-			
 		}
-		
 	}
 
-	
 	private String getContentLength(File resource) {
 		int len = (int)resource.length();
 		return Integer.toString(len);
@@ -155,7 +165,7 @@ public class HTTPResponse {
 	public void printResponseDebug(){
 		System.out.println("==================================================");
 		System.out.println("Code: " + this.responseCode); 
-		if (headers != null){
+		if (!headers.isEmpty() && headers != null){
 			System.out.println("Headers:");
 			for (Entry<String, String> entry : headers.entrySet())
 			{
