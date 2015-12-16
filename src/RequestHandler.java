@@ -8,10 +8,14 @@ import java.net.Socket;
 public class RequestHandler implements Runnable {
 	private SynchronizedQueue<Socket> jobsQueue;
 	private int id;
+	private String allHeaders;
 
 	public RequestHandler(SynchronizedQueue<Socket> jobsQueue, int id) {
 		this.jobsQueue = jobsQueue;
 		this.id = id;
+		
+		//Used for TRACE method
+		this.allHeaders = "";
 	}
 
 	@Override
@@ -32,6 +36,7 @@ public class RequestHandler implements Runnable {
 				while(connectionAlive){
 					System.out.println("Thread " + this.id +" processing request.");
 					HTTPRequest httpRequest = processRequest(inFromClient);
+					System.out.println("");
 					processResponse(outToClient, httpRequest);
 				}
 			}
@@ -58,35 +63,39 @@ public class RequestHandler implements Runnable {
 
 		firstLine = line;
 		httpRequest = new HTTPRequest(firstLine);
-		
-		// Read lines until we recognize an empty line
-		line = inFromClient.readLine();
-		while(!line.equals("")){
-			requestHeaders.append(line + Utils.CRLF);
+		if(!httpRequest.isBadRequest()){
+			// Read lines until we recognize an empty line
 			line = inFromClient.readLine();
+			while(!line.equals("")){
+				requestHeaders.append(line + Utils.CRLF);
+				line = inFromClient.readLine();
+			}
+			
+			if(httpRequest.isSupportedMethod()){
+				// parse the headers
+				if(requestHeaders.length() > 0) {
+					this.allHeaders = requestHeaders.toString();
+					httpRequest.parseHeaders(allHeaders);
+				}
+
+				// if the request is 'POST'
+				// we continue to read additional 'Content-Length' characters as parameters
+				if(httpRequest.getMethod().equals(Utils.POST)){
+					StringBuilder params = new StringBuilder();			
+					String contentLength = httpRequest.getHeader("Content-Length");
+					if(contentLength != null){
+						int charactersToRead = Integer.parseInt(contentLength);		
+						for (int i = 0; i < charactersToRead ; i++) {
+							params.append((char) inFromClient.read());
+						}
+
+						httpRequest.parseParmas(params.toString());
+					}
+				}	
+			}
 		}
 		
-		if(!httpRequest.isBadRequest() && httpRequest.isSupportedMethod()){
-			// parse the headers
-			if(requestHeaders.length() > 0) {
-				httpRequest.parseHeaders(requestHeaders.toString());
-			}
-
-			// if the request is 'POST'
-			// we continue to read additional 'Content-Length' characters as parameters
-			if(httpRequest.getMethod().equals(Utils.POST)){
-				StringBuilder params = new StringBuilder();			
-				String contentLength = httpRequest.getHeader("Content-Length");
-				if(contentLength != null){
-					int charactersToRead = Integer.parseInt(contentLength);		
-					for (int i = 0; i < charactersToRead ; i++) {
-						params.append((char) inFromClient.read());
-					}
-
-					httpRequest.parseParmas(params.toString());
-				}
-			}	
-		}
+		
 
 		
 
@@ -103,7 +112,7 @@ public class RequestHandler implements Runnable {
 	}
 
 	private void processResponse(DataOutputStream outToClient, HTTPRequest httpRequest) throws IOException {
-		HTTPResponse httpResponse = new HTTPResponse(httpRequest);
+		HTTPResponse httpResponse = new HTTPResponse(httpRequest, this.allHeaders);
 		httpResponse.makeResponse();
 		
 		// Write response

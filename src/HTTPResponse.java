@@ -7,12 +7,15 @@ public class HTTPResponse {
 	
 	private HTTPRequest request;
 	private String responseCode;
+	private String allHeaders;
 	private String HTTPVersion = Utils.HTTP_VERSION_1_1;
 	private HashMap<String,String> headers;
 	private byte[] body;
+	private boolean isFound = false;
 	
-	public HTTPResponse(HTTPRequest request){
+	public HTTPResponse(HTTPRequest request, String allHeaders){
 		this.request = request;
+		this.allHeaders = allHeaders;
 		this.headers = new HashMap<>();
 //		headers.put(Utils.CONTENT_TYPE, Utils.TEXT_HTML); // Default 
 		// ^%^ This line would cause the server to return the header even if the resource was not found.
@@ -26,36 +29,28 @@ public class HTTPResponse {
 			this.responseCode = Utils.NOT_IMPLEMENTED;
 			
 		} else { 
+			this.responseCode = Utils.OK;
+
 			// we have the same behavior in GET and POST
 			switch (request.getMethod()) {
 			case Utils.GET:
-				this.responseCode = Utils.OK;
-				getResponse();
-				break;
 			case Utils.POST:
-				postResponse();
+				getPostResponse();
 				break;
 			case Utils.HEAD:
-				this.responseCode = Utils.OK;
 				headResponse();
 				break;
 			case Utils.TRACE:
-				this.responseCode = Utils.OK;
 				traceResponse();
 				break;
 			case Utils.OPTIONS:
-				this.responseCode = Utils.OK;
 				optionsResponse();
 				break;
 			default: 
+//				TODO: Do I really need this?
 				break;
 			}			
 		}
-	}
-
-	private void postResponse() {
-		// TODO Auto-generated method stub
-		
 	}
 
 	private void optionsResponse() {
@@ -64,7 +59,12 @@ public class HTTPResponse {
 
 	private void traceResponse() {
 		headResponse();
-		this.body = request.getAllHeaders().getBytes();
+		if(this.isFound){
+			this.body = (request.getMethod() + " " 
+					+ request.getResourcePath() + " " 
+					+ request.getHTTPVersion() + " " + Utils.CRLF 
+					+ this.allHeaders).getBytes();	
+		}
 	}
 
 	private void headResponse() {
@@ -72,19 +72,23 @@ public class HTTPResponse {
 		basicResponse(resource);
 	}
 
-	private void getResponse(){
+	private void getPostResponse(){
 		File resource = Utils.getResuorce(this.request.getResourcePath());
 		basicResponse(resource);
-		try {
-			this.body = Utils.readFile(resource);
-		} catch (IOException e) {
-			this.responseCode = Utils.ERROR;
+		if(this.isFound){
+			try {
+				this.body = Utils.readFile(resource);
+			} catch (IOException e) {
+				this.responseCode = Utils.ERROR;
+			}
 		}
 	}
 	
 	private void basicResponse(File resource) {
+		
 		if (resource == null){
 			this.responseCode = Utils.NOT_FOUND;
+			isFound = false;
 		} else {
 			this.responseCode = Utils.OK;
 					
@@ -98,7 +102,8 @@ public class HTTPResponse {
 				//content-length header
 				this.headers.put(Utils.CONTENT_LENGTH, getContentLength(resource));
 			}
-		}
+			isFound = true;
+		}		
 	}
 
 	private String getContentLength(File resource) {

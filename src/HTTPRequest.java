@@ -26,19 +26,19 @@ public class HTTPRequest {
 			this.resourcePath = firstLineArr[1].trim();
 			this.HTTPVersion = firstLineArr[2].trim();
 
-			// the params are separated by '?' from the requested page
-			int delim = this.resourcePath.indexOf("?");
-			if(delim > 0){				
-				this.resourcePath = this.resourcePath.substring(0, delim);
-				if(delim + 1 < resourcePath.length()){
-					parseParmas(this.resourcePath.substring(delim + 1));
+			if(this.resourcePath.contains("../")){
+				this.isBadRequest = true;
+			}else{
+				// the params are separated by '?' from the requested page
+				int delim = this.resourcePath.indexOf("?");
+				if(delim > 0){				
+					this.resourcePath = this.resourcePath.substring(0, delim);
+					if(delim + 1 < resourcePath.length()){
+						parseParmas(this.resourcePath.substring(delim + 1));
+					}
 				}
 			}
 		} else {
-			this.isBadRequest = true;
-		}
-		
-		if(this.resourcePath.contains("../")){
 			this.isBadRequest = true;
 		}
 	}
@@ -101,17 +101,6 @@ public class HTTPRequest {
 
 	public String getHeader(String header) { 		
 		return headers.get(header);
-	}
-	
-	public String getAllHeaders(){
-		StringBuilder sb = new StringBuilder();
-		Iterator it = headers.entrySet().iterator();
-	    while (it.hasNext()) {
-	        Map.Entry pair = (Map.Entry)it.next();
-	        sb.append(pair.getKey() + ": " + pair.getValue() + Utils.CRLF);
-	        it.remove(); // avoids a ConcurrentModificationException
-	    }
-	    return sb.toString();
 	}
 	
 	public HashMap<String,String> getParams() { 
