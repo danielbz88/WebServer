@@ -1,10 +1,8 @@
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
 public class HTTPResponse {
-	
 	private HTTPRequest request;
 	private String responseCode;
 	private String allHeaders;
@@ -12,22 +10,28 @@ public class HTTPResponse {
 	private HashMap<String,String> headers;
 	private byte[] body;
 	private boolean isFound = false;
-	
+
 	public HTTPResponse(HTTPRequest request, String allHeaders){
+		if (request.internalError){
+			this.responseCode = Utils.ERROR;
+		}
+		
 		this.request = request;
 		this.allHeaders = allHeaders;
 		this.headers = new HashMap<>();
-//		headers.put(Utils.CONTENT_TYPE, Utils.TEXT_HTML); // Default 
-		// ^%^ This line would cause the server to return the header even if the resource was not found.
 	}
-	
+
+	public HTTPResponse(WebServerRuntimeException exception){
+		this.responseCode = Utils.ERROR;
+	}
+
 	protected void makeResponse(){
 		if(this.request.isBadRequest()){
 			this.responseCode = Utils.BAD_REQUEST;	
-			
+
 		} else if (!this.request.isSupportedMethod()){
 			this.responseCode = Utils.NOT_IMPLEMENTED;
-			
+
 		} else { 
 			this.responseCode = Utils.OK;
 
@@ -47,7 +51,7 @@ public class HTTPResponse {
 				optionsResponse();
 				break;
 			default: 
-//				TODO: Do I really need this?
+				//TODO: Do I really need this?
 				break;
 			}			
 		}
@@ -78,23 +82,23 @@ public class HTTPResponse {
 		if(this.isFound){
 			try {
 				this.body = Utils.readFile(resource);
-			} catch (IOException e) {
+			} catch (Exception e) {
 				this.responseCode = Utils.ERROR;
 			}
 		}
 	}
-	
+
 	private void basicResponse(File resource) {
-		
+
 		if (resource == null){
 			this.responseCode = Utils.NOT_FOUND;
 			isFound = false;
 		} else {
 			this.responseCode = Utils.OK;
-					
+
 			//content-type header
 			this.headers.put(Utils.CONTENT_TYPE, getContentType(this.request.getResourcePath()));
-					
+
 			if(this.request.isChunked()){
 				// transfer-encoding header
 				this.headers.put(Utils.HEADER_TRANSFER_ENCODING, "chunked");
@@ -110,7 +114,7 @@ public class HTTPResponse {
 		int len = (int)resource.length();
 		return Integer.toString(len);
 	}
-	
+
 	private String getContentType(String resourcePath) {
 		String type;		
 		int delim = resourcePath.indexOf('.');
@@ -145,8 +149,12 @@ public class HTTPResponse {
 		return type;
 	}
 
-	public String getResponseCode() {
-		return this.HTTPVersion + " " +this.responseCode;
+	protected String getResponseCode() {
+		return this.HTTPVersion + " " + this.responseCode;
+	}
+
+	protected boolean isWithoutError(){
+		return (this.responseCode != Utils.ERROR);
 	}
 
 	public String getResponseHeaders() {
@@ -155,15 +163,14 @@ public class HTTPResponse {
 		{
 			builder.append(entry.getKey() + ": " + entry.getValue() + Utils.CRLF);
 		}
-		
+
 		return builder.toString();
 	}
 
 	public byte[] getResponseBody() {
 		return this.body;
 	}
-	
-	
+
 	public void printResponseDebug(){
 		System.out.println("==================================================");
 		System.out.println("Code: " + this.responseCode); 
@@ -176,5 +183,4 @@ public class HTTPResponse {
 		}	
 		System.out.println("==================================================");
 	}
-
 }

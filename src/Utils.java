@@ -1,6 +1,5 @@
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 
 public class Utils {
 	
@@ -16,7 +15,6 @@ public class Utils {
 	final protected static String HEAD = "HEAD";
 	final protected static String TRACE = "TRACE";
 	final protected static String OPTIONS = "OPTIONS";
-	//TODO: Move all Utils.METHOD references to Enums 
 	
 	// Headers
 	final protected static String CONTENT_TYPE = "Content-Type";
@@ -32,7 +30,7 @@ public class Utils {
 	// Responses
 	final protected static String OK = "200 OK";
 	final protected static String NOT_FOUND = "404 Not Found";
-	final protected static String NOT_IMPLEMENTED = "501 Not Implemented";//TODO: catch these cases
+	final protected static String NOT_IMPLEMENTED = "501 Not Implemented";
 	final protected static String BAD_REQUEST = "400 Bad Request";
 	final protected static String ERROR = "500 Internal Server Error";
 	
@@ -80,7 +78,7 @@ public class Utils {
 		return (numOfParsedProps == 4);		
 	}
 	
-	protected static byte[] readFile(File file) throws IOException
+	protected static byte[] readFile(File file) throws Exception
 	{
 		FileInputStream fis = new FileInputStream(file);
 		byte[] bFile = new byte[(int)file.length()];

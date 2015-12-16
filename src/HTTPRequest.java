@@ -1,6 +1,4 @@
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Map.Entry;
 
 public class HTTPRequest {
@@ -13,6 +11,7 @@ public class HTTPRequest {
 	private boolean isBadRequest = false;
 	private boolean isChunked = false;
 	private boolean isSupportedMethod;
+	protected boolean internalError = false;
 
 	// Parse from a string like 'GET /index.html HTTP/1.1'
 	public HTTPRequest(String rawRequest) {
@@ -34,7 +33,11 @@ public class HTTPRequest {
 				if(delim > 0){				
 					this.resourcePath = this.resourcePath.substring(0, delim);
 					if(delim + 1 < resourcePath.length()){
-						parseParmas(this.resourcePath.substring(delim + 1));
+						try {
+							parseParmas(this.resourcePath.substring(delim + 1));
+						} catch (WebServerRuntimeException e) {
+							this.internalError = true;
+						}
 					}
 				}
 			}
@@ -45,7 +48,7 @@ public class HTTPRequest {
 
 	// Parsing 'headers' from a string like 
 	// 'HOST: loaclhost:80[CRLF]Content-Length: 50[CRLF]'
-	protected void parseHeaders(String rawRequest) {
+	private void parseHeaders(String rawRequest) throws WebServerRuntimeException{
 		String[] contents = rawRequest.split(Utils.CRLF);
 		for (int i = 0; i < contents.length; i++) {
 			int delim = contents[i].indexOf(":");
@@ -60,7 +63,7 @@ public class HTTPRequest {
 	}
 
 	// Parsing 'params' from a string like 'x=1&y=2'
-	protected void parseParmas(String rawParams) {
+	private void parseParmas(String rawParams) throws WebServerRuntimeException{
 		String[] paramsArray = rawParams.split("&");
 		for (int i = 0; i < paramsArray.length; i++) {
 			int delim = paramsArray[i].indexOf("=");
@@ -138,5 +141,21 @@ public class HTTPRequest {
 			}
 		}	
 		System.out.println("==================================================");
+	}
+
+	protected void addParams(String params) {
+		try {
+			parseParmas(params);
+		} catch (WebServerRuntimeException e) {
+			this.internalError = true;
+		}
+	}
+
+	protected void addHeaders(String allHeaders) {
+		try {
+			parseHeaders(allHeaders);
+		} catch (WebServerRuntimeException e) {
+			this.internalError = true;
+		}
 	}
 }

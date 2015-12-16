@@ -20,7 +20,6 @@ public class SynchronizedQueue<T> {
      * @param capacity Buffer capacity
      */
     public SynchronizedQueue(int capacity) {
-
         this.buffer = (T[])(new Object[capacity]);
         this.producers = 0; // The only producer in Lab1 is Main-Thread
         this.size = 0;
