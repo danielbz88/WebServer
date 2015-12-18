@@ -58,7 +58,8 @@ public class HTTPResponse {
 	}
 
 	private void optionsResponse() {
-		this.headers.put("Allow", "GET, POST, HEAD, TRACE, OPTIONS");
+		this.headers.put("Allow", "GET,POST,HEAD,TRACE,OPTIONS");
+		this.headers.put(Utils.CONTENT_LENGTH, "0");	
 	}
 
 	private void traceResponse() {

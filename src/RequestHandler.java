@@ -121,8 +121,10 @@ public class RequestHandler implements Runnable {
 		httpResponse.makeResponse();
 		if(httpResponse.isWithoutError()){
 			try {
-				outToClient.writeBytes(httpResponse.getResponseCode() + Utils.CRLF);
-				outToClient.writeBytes(httpResponse.getResponseHeaders() + Utils.CRLF);
+				String responseCode = httpResponse.getResponseCode() + Utils.CRLF;
+				String responseHeaders = httpResponse.getResponseHeaders() + Utils.CRLF;
+				outToClient.writeBytes(responseCode);
+				outToClient.writeBytes(responseHeaders);
 				
 				httpResponse.printResponseDebug();
 				
@@ -134,7 +136,9 @@ public class RequestHandler implements Runnable {
 					} else {
 						outToClient.write(entityBody, 0, entityBody.length);
 					}
-				}	
+				}else{
+					outToClient.writeBytes(Utils.CRLF);
+				}
 			} catch (IOException e) {
 				throw new WebServerRuntimeException("Error creating response");
 			}
@@ -157,8 +161,9 @@ public class RequestHandler implements Runnable {
 
 			offset += len;
 		}
+		
+		outToClient.writeBytes("0" + Utils.CRLF + Utils.CRLF);
 	}
-	
 	
 	/*private void processResponse(DataOutputStream outToClient, HTTPRequest httpRequest) throws IOException {	
 		try {
