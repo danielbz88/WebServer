@@ -6,7 +6,7 @@ public class HTTPRequest {
 	private String method;
 	private String resourcePath;
 	private String HTTPVersion = Utils.HTTP_VERSION_1_0; //Default
-	private HashMap<String,String> headers;
+	protected HashMap<String,String> headers;
 	private HashMap<String,String> params;
 	private boolean isBadRequest = false;
 	private boolean isChunked = false;

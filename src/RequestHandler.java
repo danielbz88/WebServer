@@ -41,14 +41,15 @@ public class RequestHandler implements Runnable {
 					System.out.println("");
 					processResponse(outToClient, httpRequest);	
 				}
-			}catch(WebServerRuntimeException e){
+			}catch(WebServerRuntimeException | IOException e){
 				//TODO: Create HTTPResponse about internal server error
-				HTTPResponse errorResponse= new HTTPResponse(e);
+				HTTPResponse errorResponse = new HTTPResponse(e);
 				try{
-					System.out.println(errorResponse.getResponseCode());
+					System.out.println(errorResponse.getHTTPVersion() + " " + errorResponse.getResponseCode());
 					DataOutputStream outToClient =
 							new DataOutputStream(socket.getOutputStream());
-					outToClient.writeBytes(errorResponse.getResponseCode() + Utils.CRLF);
+					outToClient.writeBytes(errorResponse.getHTTPVersion() + " " + errorResponse.getResponseCode() + Utils.CRLF);
+					outToClient.writeBytes(Utils.CONTENT_LENGTH + ": " + 0 + Utils.CRLF + Utils.CRLF);
 				}catch(Exception e1){
 					connectionAlive = false;
 					System.out.println("Connection Lost");
@@ -116,7 +117,7 @@ public class RequestHandler implements Runnable {
 		return httpRequest;
 	}
 
-	private void processResponse(DataOutputStream outToClient, HTTPRequest httpRequest) throws WebServerRuntimeException {
+	private void processResponse(DataOutputStream outToClient, HTTPRequest httpRequest) throws IOException {
 		HTTPResponse httpResponse = new HTTPResponse(httpRequest, this.allHeaders);
 		httpResponse.makeResponse();
 		if(httpResponse.isWithoutError()){
@@ -134,19 +135,27 @@ public class RequestHandler implements Runnable {
 					if(httpRequest.isChunked()){
 						writeChuncked(outToClient, entityBody);
 					} else {
-						outToClient.write(entityBody, 0, entityBody.length);
+						outToClient.write(entityBody, 0, httpResponse.getContentLength());
 					}
+					outToClient.writeBytes(Utils.CRLF + Utils.CRLF);
 				}else{
 					outToClient.writeBytes(Utils.CRLF);
 				}
-			} catch (IOException e) {
-				throw new WebServerRuntimeException("Error creating response");
+			} catch (Exception e) {
+				respondError(outToClient, httpResponse);
 			}
 		}else{
-			throw new WebServerRuntimeException("Error creating response");
+			respondError(outToClient, httpResponse);			
 		}		
 	}
 	
+	private void respondError(DataOutputStream outToClient, HTTPResponse httpResponse) throws IOException {
+		HTTPResponse errorResponse = new HTTPResponse(httpResponse.getResponseCode());
+		System.out.println(errorResponse.getHTTPVersion() + " " + errorResponse.getResponseCode());
+		outToClient.writeBytes(errorResponse.getHTTPVersion() + " " + errorResponse.getResponseCode() + Utils.CRLF);
+		outToClient.writeBytes(Utils.CONTENT_LENGTH + ": " + 0 + Utils.CRLF + Utils.CRLF);
+	}
+
 	private void writeChuncked(DataOutputStream outToClient, byte[] responseBody) throws IOException {
 		int offset = 0;
 		int len = Utils.CHUNK_SIZE;

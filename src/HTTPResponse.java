@@ -19,10 +19,15 @@ public class HTTPResponse {
 		this.request = request;
 		this.allHeaders = allHeaders;
 		this.headers = new HashMap<>();
+		this.headers.putAll(request.headers);
 	}
 
-	public HTTPResponse(WebServerRuntimeException exception){
+	public HTTPResponse(Exception exception){
 		this.responseCode = Utils.ERROR;
+	}
+	
+	public HTTPResponse(String responseCode){
+		this.responseCode = responseCode;
 	}
 
 	protected void makeResponse(){
@@ -105,7 +110,9 @@ public class HTTPResponse {
 				this.headers.put(Utils.HEADER_TRANSFER_ENCODING, "chunked");
 			}else{				
 				//content-length header
-				this.headers.put(Utils.CONTENT_LENGTH, getContentLength(resource));
+				if(!this.headers.containsKey(Utils.CONTENT_LENGTH)){
+					this.headers.put(Utils.CONTENT_LENGTH, getContentLength(resource));	
+				}
 			}
 			isFound = true;
 		}		
@@ -151,11 +158,15 @@ public class HTTPResponse {
 	}
 
 	protected String getResponseCode() {
-		return this.HTTPVersion + " " + this.responseCode;
+		return this.responseCode;
+	}
+	
+	protected String getHTTPVersion() {
+		return this.HTTPVersion;
 	}
 
 	protected boolean isWithoutError(){
-		return (this.responseCode != Utils.ERROR);
+		return (this.responseCode == Utils.OK);
 	}
 
 	public String getResponseHeaders() {
@@ -168,7 +179,7 @@ public class HTTPResponse {
 		return builder.toString();
 	}
 
-	public byte[] getResponseBody() {
+	public byte[] getResponseBody(){
 		return this.body;
 	}
 
@@ -183,5 +194,11 @@ public class HTTPResponse {
 			}	
 		}	
 		System.out.println("==================================================");
+	}
+
+	protected int getContentLength() throws NumberFormatException{
+		int parsedFromRequest = Integer.parseInt(this.headers.get(Utils.CONTENT_LENGTH));
+		int contentLength = Math.min(this.body.length, parsedFromRequest);
+		return contentLength;
 	}
 }
