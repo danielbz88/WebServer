@@ -157,12 +157,8 @@ public class HTTPResponse {
 		return type;
 	}
 
-	protected String getResponseCode() {
+	protected String getResponseHeader() {
 		return this.HTTPVersion + " " + this.responseCode;
-	}
-	
-	protected String getHTTPVersion() {
-		return this.HTTPVersion;
 	}
 
 	protected boolean isWithoutError(){
@@ -200,5 +196,9 @@ public class HTTPResponse {
 		int parsedFromRequest = Integer.parseInt(this.headers.get(Utils.CONTENT_LENGTH));
 		int contentLength = Math.min(this.body.length, parsedFromRequest);
 		return contentLength;
+	}
+
+	protected String response() {
+		return this.responseCode;
 	}
 }

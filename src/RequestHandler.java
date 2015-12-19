@@ -45,10 +45,10 @@ public class RequestHandler implements Runnable {
 				//TODO: Create HTTPResponse about internal server error
 				HTTPResponse errorResponse = new HTTPResponse(e);
 				try{
-					System.out.println(errorResponse.getHTTPVersion() + " " + errorResponse.getResponseCode());
+					System.out.println(errorResponse.getResponseHeader());
 					DataOutputStream outToClient =
 							new DataOutputStream(socket.getOutputStream());
-					outToClient.writeBytes(errorResponse.getHTTPVersion() + " " + errorResponse.getResponseCode() + Utils.CRLF);
+					outToClient.writeBytes(errorResponse.getResponseHeader() + Utils.CRLF);
 					outToClient.writeBytes(Utils.CONTENT_LENGTH + ": " + 0 + Utils.CRLF + Utils.CRLF);
 				}catch(Exception e1){
 					connectionAlive = false;
@@ -127,7 +127,7 @@ public class RequestHandler implements Runnable {
 		httpResponse.makeResponse();
 		if(httpResponse.isWithoutError()){
 			try {
-				String responseCode = httpResponse.getResponseCode() + Utils.CRLF;
+				String responseCode = httpResponse.getResponseHeader() + Utils.CRLF;
 				String responseHeaders = httpResponse.getResponseHeaders() + Utils.CRLF;
 				outToClient.writeBytes(responseCode);
 				outToClient.writeBytes(responseHeaders);
@@ -163,9 +163,9 @@ public class RequestHandler implements Runnable {
 	}
 	
 	private void respondError(DataOutputStream outToClient, HTTPResponse httpResponse) throws IOException {
-		HTTPResponse errorResponse = new HTTPResponse(httpResponse.getResponseCode());
-		System.out.println(errorResponse.getHTTPVersion() + " " + errorResponse.getResponseCode());
-		outToClient.writeBytes(errorResponse.getHTTPVersion() + " " + errorResponse.getResponseCode() + Utils.CRLF);
+		HTTPResponse errorResponse = new HTTPResponse(httpResponse.response());
+		System.out.println(errorResponse.getResponseHeader());
+		outToClient.writeBytes(errorResponse.getResponseHeader() + Utils.CRLF);
 		outToClient.writeBytes(Utils.CONTENT_LENGTH + ": " + 0 + Utils.CRLF + Utils.CRLF);
 	}
 
