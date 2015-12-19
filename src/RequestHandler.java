@@ -34,7 +34,7 @@ public class RequestHandler implements Runnable {
 						new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				DataOutputStream outToClient =
 						new DataOutputStream(socket.getOutputStream());
-				// persistent connection
+				// persistent connection [bonus]
 				while(connectionAlive){
 					System.out.println("Thread " + this.id +" processing request.");
 					HTTPRequest httpRequest = processRequest(inFromClient);
@@ -65,11 +65,12 @@ public class RequestHandler implements Runnable {
 		HTTPRequest httpRequest = null;
 		String firstLine;
 		StringBuilder requestHeaders = new StringBuilder();
-
-		// Read lines until we recognize the start of an HTTP protocol
-		//**Bonus** 
+		
 		try {
 			String line = "";
+			
+			// Read lines until we recognize the start of an HTTP protocol
+			//[Bonus] 
 			while(!line.endsWith(Utils.HTTP_VERSION_1_0) && !line.endsWith(" " + Utils.HTTP_VERSION_1_1)){
 
 				line = inFromClient.readLine();
@@ -77,7 +78,10 @@ public class RequestHandler implements Runnable {
 
 			firstLine = line;
 			httpRequest = new HTTPRequest(firstLine);
+			requestHeaders.append(firstLine + Utils.CRLF);
+			
 			if(!httpRequest.isBadRequest()){
+				
 				// Read lines until we recognize an empty line
 				line = inFromClient.readLine();
 				while(!line.equals("")){
@@ -113,9 +117,10 @@ public class RequestHandler implements Runnable {
 		}
 		
 		httpRequest.validate();
-		httpRequest.printRequestDebug();
+		printHeader(this.id, requestHeaders.toString(), "Request");
 		return httpRequest;
 	}
+
 
 	private void processResponse(DataOutputStream outToClient, HTTPRequest httpRequest) throws IOException {
 		HTTPResponse httpResponse = new HTTPResponse(httpRequest, this.allHeaders);
@@ -127,7 +132,8 @@ public class RequestHandler implements Runnable {
 				outToClient.writeBytes(responseCode);
 				outToClient.writeBytes(responseHeaders);
 				
-				httpResponse.printResponseDebug();
+				printHeader(id, responseCode + responseHeaders, "Response");
+				
 				
 				byte[] entityBody = httpResponse.getResponseBody();
 				
@@ -147,6 +153,13 @@ public class RequestHandler implements Runnable {
 		}else{
 			respondError(outToClient, httpResponse);			
 		}		
+	}
+	
+	private void printHeader(int thread, String header, String type) {       
+		System.out.println("================ Thread " + thread +" " + type + " ===============");
+		System.out.println(header);
+		System.out.println("==================================================");
+		
 	}
 	
 	private void respondError(DataOutputStream outToClient, HTTPResponse httpResponse) throws IOException {

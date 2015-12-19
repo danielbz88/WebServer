@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -111,13 +112,16 @@ public class HTTPRequest {
 	}
 
 	// Validate the request is up to standards 
-	public void validate() {
-		if(this.HTTPVersion.equals(Utils.HTTP_VERSION_1_1)){
-			this.isBadRequest &= this.headers.containsKey("Host");
+	public void validate() throws IOException {
+		if(this.HTTPVersion.equals(Utils.HTTP_VERSION_1_1) && !this.isBadRequest){
+			this.isBadRequest = !this.headers.containsKey("Host");
 		}
 		if(this.headers.get("chunked") != null){
 			String value = (String) this.headers.get("chunked");
 			this.isChunked = value.equals("yes");
+		}
+		if(this.resourcePath.endsWith("/params_info.html")){
+			Utils.makeParmasInfo(this.params);
 		}
 
 	}

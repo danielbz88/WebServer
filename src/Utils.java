@@ -1,5 +1,11 @@
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.HashMap;
+import java.util.Map.Entry;
 
 public class Utils {
 	
@@ -94,7 +100,7 @@ public class Utils {
 	// return null if the file doesnt exists
 	public static File getResuorce(String resourcePath) {
 		File resource = null;
-		if(resourcePath.equals("/")){
+		if(resourcePath.equals("/") || resourcePath.equals("./")){
 			resource = new File(ROOT + "/" + DEFUALT_PAGE);
 		} else {
 			resource = new File(ROOT + resourcePath);
@@ -132,5 +138,19 @@ public class Utils {
 		}
 		
 		return isSupportedMethod;
+	}
+
+	public static void makeParmasInfo(HashMap<String, String> params) throws IOException {
+		File file = new File(ROOT + "/params_info.html");
+		FileOutputStream writeToFile = new FileOutputStream(file);
+		writeToFile.write("<!DOCTYPE html><html><body>".getBytes());
+		if (params != null){
+			for (Entry<String, String> entry : params.entrySet())
+			{
+				writeToFile.write(("<p>" + entry.getKey() + "=" + entry.getValue() + "</p>").getBytes());
+			}
+		}	
+		writeToFile.write("</body></html>".getBytes());
+		writeToFile.close();
 	}
 }

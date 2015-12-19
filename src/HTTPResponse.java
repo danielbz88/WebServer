@@ -19,7 +19,7 @@ public class HTTPResponse {
 		this.request = request;
 		this.allHeaders = allHeaders;
 		this.headers = new HashMap<>();
-		this.headers.putAll(request.headers);
+		//this.headers.putAll(request.headers);
 	}
 
 	public HTTPResponse(Exception exception){
@@ -103,7 +103,7 @@ public class HTTPResponse {
 			this.responseCode = Utils.OK;
 
 			//content-type header
-			this.headers.put(Utils.CONTENT_TYPE, getContentType(this.request.getResourcePath()));
+			this.headers.put(Utils.CONTENT_TYPE, getContentType(resource.getAbsolutePath()));
 
 			if(this.request.isChunked()){
 				// transfer-encoding header
@@ -158,7 +158,7 @@ public class HTTPResponse {
 	}
 
 	protected String getResponseCode() {
-		return this.responseCode;
+		return this.HTTPVersion + " " + this.responseCode;
 	}
 	
 	protected String getHTTPVersion() {
