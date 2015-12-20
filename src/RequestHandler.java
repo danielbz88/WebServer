@@ -82,23 +82,24 @@ public class RequestHandler implements Runnable {
 			firstLine = line;
 			httpRequest = new HTTPRequest(firstLine);
 			requestHeaders.append(firstLine + Utils.CRLF);
+							
+			// Read lines until we recognize an empty line
+			line = inFromClient.readLine();
+			while(!line.equals("")){
+				requestHeaders.append(line + Utils.CRLF);
+				line = inFromClient.readLine();
+			}
 			
 			if(!httpRequest.isBadRequest()){
 				
-				// Read lines until we recognize an empty line
-				line = inFromClient.readLine();
-				while(!line.equals("")){
-					requestHeaders.append(line + Utils.CRLF);
-					line = inFromClient.readLine();
+				// parse the headers
+				if(requestHeaders.length() > 0) {
+					this.allHeaders = requestHeaders.toString();
+					httpRequest.addHeaders(allHeaders);
 				}
-
+				
 				if(httpRequest.isSupportedMethod()){
-					// parse the headers
-					if(requestHeaders.length() > 0) {
-						this.allHeaders = requestHeaders.toString();
-						httpRequest.addHeaders(allHeaders);
-					}
-
+					
 					// if the request is 'POST'
 					// we continue to read additional 'Content-Length' characters as parameters
 					if(httpRequest.getMethod().equals(Utils.POST)){
