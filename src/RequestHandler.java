@@ -28,8 +28,8 @@ public class RequestHandler implements Runnable {
 
 				connectionAlive = true;
 				// Set the time we wait for the client to write a new-line
-				// to 10 seconds
-				//socket.setSoTimeout(10000);
+				// to 30 seconds
+				socket.setSoTimeout(30000);
 				BufferedReader inFromClient =
 						new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				DataOutputStream outToClient =
@@ -39,7 +39,10 @@ public class RequestHandler implements Runnable {
 					System.out.println("Thread " + this.id +" processing request.");
 					HTTPRequest httpRequest = processRequest(inFromClient);
 					System.out.println("");
-					processResponse(outToClient, httpRequest);	
+					processResponse(outToClient, httpRequest);
+					
+					// [bonus] satisfy persistent connection only with HTTP/1.1
+					connectionAlive = httpRequest.getHTTPVersion().equals(Utils.HTTP_VERSION_1_1);
 				}
 			}catch(WebServerRuntimeException | IOException e){
 				//TODO: Create HTTPResponse about internal server error
