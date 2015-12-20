@@ -68,13 +68,19 @@ public class HTTPResponse {
 	}
 
 	private void traceResponse() {
-		headResponse();
-		if(this.isFound){
-			this.body = (request.getMethod() + " " 
-					+ request.getResourcePath() + " " 
-					+ request.getHTTPVersion() + " " + Utils.CRLF 
-					+ this.allHeaders).getBytes();	
+		this.responseCode = Utils.OK;
+		this.headers.put(Utils.CONTENT_TYPE, Utils.TEXT_HTML);
+		this.body = this.allHeaders.getBytes();
+		if(this.request.isChunked()){
+			// transfer-encoding header
+			this.headers.put(Utils.HEADER_TRANSFER_ENCODING, "chunked");
+		}else{				
+			//content-length header
+			if(!this.headers.containsKey(Utils.CONTENT_LENGTH)){
+				this.headers.put(Utils.CONTENT_LENGTH, Integer.toString(this.body.length));	
+			}
 		}
+
 	}
 
 	private void headResponse() {

@@ -120,8 +120,10 @@ public class HTTPRequest {
 			String value = (String) this.headers.get("chunked");
 			this.isChunked = value.equals("yes");
 		}
-		if(this.resourcePath.endsWith("/params_info.html")){
-			Utils.makeParmasInfo(this.params);
+		if(this.resourcePath != null){
+			if(this.resourcePath.endsWith("/params_info.html")){
+				Utils.makeParmasInfo(this.params);
+			}
 		}
 
 	}
