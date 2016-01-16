@@ -1,0 +1,7 @@
+Bonus 
+
+1. We implemented the OPTIONS HTTP method.
+2. We implemented a persistent connection (only with HTTP/1.1).
+3. We implemented a tolerant server. Meaning the server ignores 
+	flawed parameters and headers, instead of sending an error message. 
+	- This was discussed in person with Tzvi and approved as a bonus feature.
